@@ -1,0 +1,1 @@
+Stock configs from Kittopia dumps
