@@ -1,3 +1,224 @@
+class Orbit {
+	constructor(mu, sma, eccentricity, inclination, lan, argp, epoch, meananomalyatepoch) {
+		this.mu = mu;
+		this.sma = sma;
+		this.eccentricity = eccentricity;
+		this.inclination = inclination;
+		this.longascendingnode = lan;
+		this.argperiapsis = argp;
+		this.epoch = epoch;
+		this.meananomalyatepoch = meananomalyatepoch;
+	}
+
+	get meanmotion() {
+		return Math.sqrt(this.mu / Math.abs(this.sma * this.sma * this.sma));
+	}
+
+	get period() {
+		if (this.sma < 0) return Infinity;
+		return 2 * Math.PI / this.meanmotion;
+	}
+
+	get semilatusrectum() {
+		return this.sma * (1 - this.eccentricity * this.eccentricity);
+	}
+
+	get specificangularmomentum() {
+		return Math.sqrt(this.semilatusrectum * this.mu);
+	}
+
+	get semiminoraxis() {
+		return this.sma * Math.sqrt(Math.abs(this.eccentricity * this.eccentricity - 1));
+	}
+
+	get periapsis() {
+		return this.sma * (1 - this.eccentricity);
+	}
+
+	get apoapsis() {
+		return this.sma * (1 + this.eccentricity);
+	}
+
+	meananomaly(time) {
+		let anomaly = this.meananomalyatepoch + (time - this.epoch) * this.meanmotion;
+
+		if (this.sma > 0) {
+			anomaly = anomaly % (2 * Math.PI);
+
+			if (anomaly < 0) anomaly += 2 * Math.PI;
+		}
+
+		return anomaly;
+	}
+
+	eccentricanomaly(time) {
+		let meananomaly = this.meananomaly(time);
+
+		if (this.sma > 0) {
+			// Elliptical case
+			// Kepler equation: M = E - e * sin(E)
+			// f(E)  = E - e * sin(E) - M
+			// f'(E) = 1 - e * cos(E)
+
+			let E = meananomaly;
+
+			for (let i = 0; i < 5; i++) {
+				let f = E - this.eccentricity * Math.sin(E) - meananomaly;
+				let df = 1 - this.eccentricity * Math.cos(E);
+
+				E -= f / df;
+			}
+
+			return E;
+		} else {
+			// Hyperbolic case
+			// Kepler equation: M = e * sinh(H) - H
+			// f(H)  = e * sinh(H) - H - M
+			// f'(H) = e * cosh(H) - 1
+
+			let H = Math.cbrt(meananomaly); //Extremely good guess
+
+			for (let i = 0; i < 5; i++) {
+				let f = this.eccentricity * Math.sinh(H) - H - meananomaly;
+				let df = this.eccentricity * Math.cosh(H) - 1;
+
+				H -= f / df;
+			}
+
+			return H;
+		}
+	}
+
+	trueanomaly(time) {
+		let E = this.eccentricanomaly(time);
+		let sqrtquotient = Math.sqrt(Math.abs(
+			(this.eccentricity + 1) / (this.eccentricity - 1)
+		));
+
+		let tanE;
+
+		if (this.sma > 0) {
+			//Elliptical case
+			tanE = Math.tan(E / 2);
+		} else {
+			//Hyperbolic case
+			tanE = Math.tanh(E / 2);
+		}
+
+		return 2 * Math.atan(tanE * sqrtquotient);
+	}
+
+	distance(time) {
+		let E = this.eccentricanomaly(time);
+
+		if (this.sma > 0) {
+			return this.sma * (1 - this.eccentricity * Math.cos(E));
+		}
+		return this.sma * (1 - this.eccentricity * Math.cosh(E));
+	}
+
+	speed(time) {
+		let dist = this.distance(time);
+		return Math.sqrt(this.mu * (2 / dist - 1 / this.sma));
+	}
+
+	hvel(time) {
+		let dist = this.distance(time);
+		return this.specificangularmomentum / dist;
+	}
+
+	vvel(time) {
+		let absvvel = Math.sqrt(
+			Math.pow(this.speed(time), 2) - Math.pow(this.hvel(time), 2)
+		);
+
+		let meananomaly = this.meananomaly(time);
+		if (meananomaly < 0) return -absvvel;
+		if (this.sma < 0) return absvvel;
+		if (meananomaly < Math.PI) return absvvel;
+		return -absvvel;
+	}
+
+	getState(time) {
+		let E = this.eccentricanomaly(time);
+		let f = this.trueanomaly(time);
+
+		let latusspeed = Math.sqrt(this.mu / this.semilatusrectum);
+		let P = latusspeed * this.eccentricity;
+
+		let pos;
+		let vel = new Vector3(
+			-latusspeed * Math.sin(f),
+			latusspeed * Math.cos(f) + P,
+			0
+		);
+
+		if (this.sma > 0) {
+			// Elliptical case - perifocal coordinate system
+			pos = new Vector3(
+				this.sma * (Math.cos(E) - this.eccentricity), 
+				this.semiminoraxis * Math.sin(E),
+				0
+			);
+		} else {
+			// Hyperbolic case - perifocal coordinate system
+			pos = new Vector3(
+				this.sma * (Math.cosh(E) - this.eccentricity), 
+				this.semiminoraxis * Math.sinh(E), 
+				0
+			);
+		}
+
+		// Rotate by argument of periapsis
+		let cosargp = Math.cos(this.argperiapsis);
+		let sinargp = Math.sin(this.argperiapsis);
+
+		pos = new Vector3(
+			pos.x * cosargp - pos.y * sinargp,
+			pos.y * cosargp + pos.x * sinargp,
+			0
+		);
+
+		vel = new Vector3(
+			vel.x * cosargp - vel.y * sinargp,
+			vel.y * cosargp + vel.x * sinargp,
+			0
+		);
+		// Rotate by inclination
+		let cosinc = Math.cos(this.inclination);
+		let sininc = Math.sin(this.inclination);
+
+		pos = new Vector3(
+			pos.x,
+			pos.y * cosinc,
+			pos.y * sininc
+		);
+
+		vel = new Vector3(
+			vel.x,
+			vel.y * cosinc,
+			vel.y * sininc
+		);
+		// Rotate by longitude of ascending node
+		let coslan = Math.cos(this.longascendingnode);
+		let sinlan = Math.sin(this.longascendingnode);
+
+		pos = new Vector3(
+			pos.x * coslan - pos.y * sinlan,
+			pos.y * coslan + pos.x * sinlan,
+			pos.z
+		);
+
+		vel = new Vector3(
+			vel.x * coslan - vel.y * sinlan,
+			vel.y * coslan + vel.x * sinlan,
+			vel.z
+		);
+
+		return {r: pos, v: vel};
+	}
+};
+
 //Based on pykep.propagate_lagrangian
 function propagate(r0, v0, tof, mu) {
 	let r = r0.norm;
@@ -90,8 +311,6 @@ function propagate(r0, v0, tof, mu) {
 		G = a * dot3(r0, v0) / mu * (1 - Math.cosh(dH)) + r * Math.sqrt(-a / mu) * Math.sinh(dH);
 		Ft = -Math.sqrt(-mu * a) / (r2 * r) * Math.sinh(dH);
 		Gt = 1 - a / r2 * (1 - Math.cosh(dH));
-
-		console.log(F, G, Ft, Gt);
 	}
 
 	return {

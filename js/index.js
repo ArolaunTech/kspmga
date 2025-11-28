@@ -2,6 +2,8 @@ import * as THREE from 'three';
 
 let system = new System("../data/systems/stock.json");
 
+console.log(system);
+
 const canvas = document.getElementById("system");
 
 const scene = new THREE.Scene();
@@ -12,8 +14,9 @@ renderer.setSize(canvas.width, canvas.height);
 renderer.setAnimationLoop(animate);
 
 const geometry = new THREE.SphereGeometry(1, 32, 16);
-const material = new THREE.MeshBasicMaterial({
-	color: 0x00ff00
+const material = new THREE.MeshStandardMaterial({
+	color: 0x00ff00,
+	emissive: 0xffff80
 });
 const sphere = new THREE.Mesh(geometry, material);
 scene.add(sphere);
