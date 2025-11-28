@@ -32,3 +32,16 @@ function secsToKerbalTimeString(secs) {
 
 	return `Year ${time[0]}, Day ${time[1]} ${time[2]}:${stringminutes}:${stringseconds}`;
 }
+
+function kerbalTimeToSecs(time) {
+	let duration = time;
+
+	duration[0]--;
+	duration[1]--;
+
+	return kerbalDurationToSecs(duration);
+}
+
+function kerbalDurationToSecs(duration) {
+	return 9201600 * duration[0] + 21600 * duration[1] + 3600 * duration[2] + 60 * duration[3] + duration[4];
+}

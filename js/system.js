@@ -20,10 +20,24 @@ class System {
 	}
 
 	getPosition(name, time) {
-		let body = this.bodies[this.bodymap.get(name)];
+		let bodyindex = this.bodymap.get(name);
+		let body = this.bodies[bodyindex];
 
 		if (body.root) {
-			
+			return new Vector3(0, 0, 0);
 		}
+
+		//Parent pos + current pos
+	}
+
+	getVelocity(name, time) {
+		let bodyindex = this.bodymap.get(name);
+		let body = this.bodies[bodyindex];
+
+		if (body.root) {
+			return new Vector3(0, 0, 0);
+		}
+
+		//Parent vel + current vel
 	}
 };

@@ -6,9 +6,13 @@ class Vector3 {
 	}
 
 	get norm() {
-		return Math.hypot(x, y, z);
+		return Math.hypot(this.x, this.y, this.z);
 	}
 };
+
+function add3(a, b) {
+	return new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
+}
 
 function dot3(a, b) {
 	return a.x * b.x + a.y * b.y + a.z * b.z;
@@ -22,8 +26,10 @@ function cross(a, b) {
 	);
 }
 
-function normalize(a) {
-	let norm = a.norm;
+function mult3(a, b) {
+	return new Vector3(a.x * b, a.y * b, a.z * b);
+}
 
-	return new Vector3(a.x / norm, a.y / norm, a.z / norm);
+function normalize3(a) {
+	return mult3(a, 1 / a.norm);
 }
