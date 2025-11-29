@@ -96,7 +96,7 @@ for configpath in configs:
 	initanomaly = -1
 	epoch = 0
 	refbody = None
-	color = [1, 1, 1, 1]
+	color = [1, 1, 0.75, 1]
 	if orbitnode == []:
 		root = True
 		rootmass = gravparameter

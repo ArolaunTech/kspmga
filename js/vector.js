@@ -1,4 +1,4 @@
-class Vector3 {
+export class Vector3 {
 	constructor(x, y, z) {
 		this.x = x;
 		this.y = y;
@@ -10,15 +10,15 @@ class Vector3 {
 	}
 };
 
-function add3(a, b) {
+export function add3(a, b) {
 	return new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
 }
 
-function dot3(a, b) {
+export function dot3(a, b) {
 	return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-function cross(a, b) {
+export function cross(a, b) {
 	return new Vector3(
 		a.y * b.z - a.z * b.y,
 		a.z * b.x - a.x * b.z,
@@ -26,10 +26,10 @@ function cross(a, b) {
 	);
 }
 
-function mult3(a, b) {
+export function mult3(a, b) {
 	return new Vector3(a.x * b, a.y * b, a.z * b);
 }
 
-function normalize3(a) {
+export function normalize3(a) {
 	return mult3(a, 1 / a.norm);
 }

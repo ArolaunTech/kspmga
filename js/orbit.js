@@ -1,4 +1,6 @@
-class Orbit {
+import { Vector3 } from './vector.js';
+
+export class Orbit {
 	constructor(mu, sma, eccentricity, inclination, lan, argp, epoch, meananomalyatepoch) {
 		this.mu = mu;
 		this.sma = sma;
@@ -217,10 +219,60 @@ class Orbit {
 
 		return {r: pos, v: vel};
 	}
+
+	getPosFromE(E) {
+		let pos;
+
+		if (this.sma > 0) {
+			// Elliptical case - perifocal coordinate system
+			pos = new Vector3(
+				this.sma * (Math.cos(E) - this.eccentricity), 
+				this.semiminoraxis * Math.sin(E),
+				0
+			);
+		} else {
+			// Hyperbolic case - perifocal coordinate system
+			pos = new Vector3(
+				this.sma * (Math.cosh(E) - this.eccentricity), 
+				this.semiminoraxis * Math.sinh(E), 
+				0
+			);
+		}
+
+		// Rotate by argument of periapsis
+		let cosargp = Math.cos(this.argperiapsis);
+		let sinargp = Math.sin(this.argperiapsis);
+
+		pos = new Vector3(
+			pos.x * cosargp - pos.y * sinargp,
+			pos.y * cosargp + pos.x * sinargp,
+			0
+		);
+		// Rotate by inclination
+		let cosinc = Math.cos(this.inclination);
+		let sininc = Math.sin(this.inclination);
+
+		pos = new Vector3(
+			pos.x,
+			pos.y * cosinc,
+			pos.y * sininc
+		);
+		// Rotate by longitude of ascending node
+		let coslan = Math.cos(this.longascendingnode);
+		let sinlan = Math.sin(this.longascendingnode);
+
+		pos = new Vector3(
+			pos.x * coslan - pos.y * sinlan,
+			pos.y * coslan + pos.x * sinlan,
+			pos.z
+		);
+
+		return pos;
+	}
 };
 
 //Based on pykep.propagate_lagrangian
-function propagate(r0, v0, tof, mu) {
+export function propagate(r0, v0, tof, mu) {
 	let r = r0.norm;
 	let v = v0.norm;
 

@@ -1,4 +1,4 @@
-function secsToKerbalDuration(secs) {
+export function secsToKerbalDuration(secs) {
 	let seconds = secs % 60;
 	let minutes = Math.floor(secs / 60) % 60;
 	let hours = Math.floor(secs / 3600) % 6;
@@ -8,7 +8,7 @@ function secsToKerbalDuration(secs) {
 	return [years, days, hours, minutes, seconds];
 }
 
-function secsToKerbalTime(secs) {
+export function secsToKerbalTime(secs) {
 	let duration = secsToKerbalDuration(secs);
 
 	duration[0]++;
@@ -17,7 +17,7 @@ function secsToKerbalTime(secs) {
 	return duration;
 }
 
-function secsToKerbalTimeString(secs) {
+export function secsToKerbalTimeString(secs) {
 	let time = secsToKerbalTime(secs);
 
 	let stringminutes = String(time[3]);
@@ -33,7 +33,7 @@ function secsToKerbalTimeString(secs) {
 	return `Year ${time[0]}, Day ${time[1]} ${time[2]}:${stringminutes}:${stringseconds}`;
 }
 
-function kerbalTimeToSecs(time) {
+export function kerbalTimeToSecs(time) {
 	let duration = time;
 
 	duration[0]--;
@@ -42,6 +42,6 @@ function kerbalTimeToSecs(time) {
 	return kerbalDurationToSecs(duration);
 }
 
-function kerbalDurationToSecs(duration) {
+export function kerbalDurationToSecs(duration) {
 	return 9201600 * duration[0] + 21600 * duration[1] + 3600 * duration[2] + 60 * duration[3] + duration[4];
 }
