@@ -10,6 +10,8 @@ export class Vector3 {
 	}
 };
 
+// TO-DO: turn these functions into static functions
+
 export function add3(a, b) {
 	return new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
 }

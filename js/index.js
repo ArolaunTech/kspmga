@@ -33,6 +33,6 @@ function animate() {
 
 	if (system.ready) {
 		system.updateScene(groups, SCALE, time);
-		time += 2000;
+		time += 200;
 	}
 }
