@@ -366,7 +366,7 @@ export function propagate(r0, v0, tof, mu) {
 	}
 
 	return {
-		r: add3(mult3(r0, F),  mult3(v0, G)),
-		v: add3(mult3(r0, Ft), mult3(v0, Gt))
+		r: Vector3.add(mult3(r0, F),  mult3(v0, G)),
+		v: Vector3.add(mult3(r0, Ft), mult3(v0, Gt))
 	};
 }

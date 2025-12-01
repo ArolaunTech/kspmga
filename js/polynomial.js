@@ -245,27 +245,38 @@ export function solveQuarticBairstow(p, q, r, s) {
 	//  4     3     2
 	// x  + px  + qx  + rx + s = 0
 
-	let u = Math.random();
-	let v = Math.random();
+	let converged = false;
+	let iters = 0;
 
-	for (let i = 0; i < 50; i++) {
-		let b1 = p - u;
-		let b0 = q - v - u * b1;
+	let u, v;
 
-		let c = r - v * b1 - u * b0;
-		let d = s - v * b0;
+	while (!converged && iters < 100) {
+		iters++;
+		u = Math.random();
+		v = Math.random();
 
-		let g = b1 - u;
-		let h = b0 - v;
+		for (let i = 0; i < 50; i++) {
+			let b1 = p - u;
+			let b0 = q - v - u * b1;
 
-		let quotient = 1 / (v * g * g + h * (h - u * g));
-		let du = -quotient * (-h * c + g * d);
-		let dv = -quotient * (-g * v * c + (g * u - h) * d);
+			let c = r - v * b1 - u * b0;
+			let d = s - v * b0;
 
-		u += du;
-		v += dv;
+			let g = b1 - u;
+			let h = b0 - v;
 
-		if ((c * c + d * d) < 1e-30) break;
+			let quotient = 1 / (v * g * g + h * (h - u * g));
+			let du = -quotient * (-h * c + g * d);
+			let dv = -quotient * (-g * v * c + (g * u - h) * d);
+
+			u += du;
+			v += dv;
+
+			if ((c * c + d * d) < 1e-30) {
+				converged = true;
+				break;
+			}
+		}
 	}
 
 	let b1 = p - u;
@@ -389,6 +400,8 @@ export function realRootsQuartic(p, q, r, s) {
 			out.push(roots[i].a);
 		}
 	}
+
+	out.sort();
 
 	return out;
 }

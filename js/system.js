@@ -3,7 +3,7 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { Line2 } from 'three/addons/lines/Line2.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { Orbit } from './orbit.js';
-import { Vector3, add3 } from './vector.js';
+import { Vector3 } from './vector.js';
 import { colorArrToHex } from './color.js';
 
 export class System {
@@ -50,6 +50,16 @@ export class System {
 			});
 	}
 
+	get rootmu() {
+		let numbodies = this.bodies.length;
+		for (let i = 0; i < numbodies; i++) {
+			if (this.bodies[i].root) {
+				return this.bodies[i].gravparameter;
+			}
+		}
+		return 0;
+	}
+
 	getState(name, time) {
 		let bodyindex = this.bodymap.get(name);
 		let body = this.bodies[bodyindex];
@@ -63,7 +73,7 @@ export class System {
 		let parentstate = this.getState(parent, time);
 		let currstate = body.orbit.getState(time);
 
-		return {r: add3(parentstate.r, currstate.r), v: add3(parentstate.v, currstate.v)};
+		return {r: Vector3.add(parentstate.r, currstate.r), v: Vector3.add(parentstate.v, currstate.v)};
 	}
 
 	fillScene(scene, scale, xres, yres) {
