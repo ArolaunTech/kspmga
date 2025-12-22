@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>mga</title>
+		<title>tester</title>
 		<script type="importmap">
 		{
 			"imports": {
@@ -13,7 +13,12 @@
 		<link rel="stylesheet" href="css/index.css"/>
 	</head>
 	<body>
-		<canvas width="640" height="480" id="system">Solar system view</canvas>
+		<h1>JS Tester</h1>
+
+		<div>
+			<label for="results">Tests passed:</label>
+			<progress id="results" max="100" value="0"></progress>
+		</div>
 
 		<script type="module" src="js/random.js"></script>
 		<script type="module" src="js/color.js"></script>
@@ -23,6 +28,8 @@
 		<script type="module" src="js/orbit.js"></script>
 		<script type="module" src="js/system.js"></script>
 		<script type="module" src="js/mga.js"></script>
-		<script type="module" src="js/index.js"></script>
+
+		<script type="module" src="js/tests/integrator.js"></script>
+		<script type="module" src="js/tests/tester.js"></script>
 	</body>
 </html>

@@ -273,6 +273,21 @@ export class Orbit {
 
 //Based on pykep.propagate_lagrangian
 export function propagate(r0, v0, tof, mu) {
+	if (tof === 0) {
+		return {
+			r: r0,
+			v: v0
+		};
+	}
+	if (tof < 0) {
+		let res = propagate(r0, Vector3.mult(v0, -1), -tof, mu);
+
+		return {
+			r: res.r, 
+			v: Vector3.mult(res.v, -1)
+		};
+	}
+
 	let r = r0.norm;
 	let v = v0.norm;
 
@@ -281,7 +296,7 @@ export function propagate(r0, v0, tof, mu) {
 
 	let dM = Math.sqrt(Math.abs(mu / (a * a * a))) * tof;
 
-	let C1 = dot3(r0, v0) / Math.sqrt(Math.abs(mu * a));
+	let C1 = Vector3.dot(r0, v0) / Math.sqrt(Math.abs(mu * a));
 	let C2 = 1 - r / a;
 
 	let F, G, Ft, Gt;
@@ -319,10 +334,10 @@ export function propagate(r0, v0, tof, mu) {
 			dE -= f / df;
 		}
 
-		let r2 = a + (r - a) * Math.cos(dE) + dot3(r0, v0) * Math.sqrt(a / mu) * Math.sin(dE);
+		let r2 = a + (r - a) * Math.cos(dE) + Vector3.dot(r0, v0) * Math.sqrt(a / mu) * Math.sin(dE);
 
 		F = 1 - a / r * (1 - Math.cos(dE));
-		G = a * dot3(r0, v0) / mu * (1 - Math.cos(dE)) + r * Math.sqrt(a / mu) * Math.sin(dE);
+		G = a * Vector3.dot(r0, v0) / mu * (1 - Math.cos(dE)) + r * Math.sqrt(a / mu) * Math.sin(dE);
 		Ft = -Math.sqrt(mu * a) / (r2 * r) * Math.sin(dE);
 		Gt = 1 - a / r2 * (1 - Math.cos(dE));
 	} else {
@@ -343,30 +358,36 @@ export function propagate(r0, v0, tof, mu) {
 		// | dM = dot(r0, v0) * (cosh(dH) - 1) / sqrt(-mu * a) + (1 - r / a)sinh(dH) - dH |
 		// +==============================================================================+
 		//
-		// Setting up Newton's method:
+		// Set up:
 		// f(dH)  = dot(r0, v0) * (cosh(dH) - 1) / sqrt(-mu * a) + (1 - r / a)sinh(dH) - dH - dM
 		// f'(dH) = dot(r0, v0) * sinh(dH) / sqrt(-mu * a)       + (1 - r / a)cosh(dH) - 1
 
-		let dH = (tof > 0) ? 1 : -1;
+		// Newton's method is too unstable for hyperbolic orbits so I will do something else here
+		// C2 > 0 since the orbit is hyperbolic, dM > 0 since tof > 0 in this part of the function
+		// C1 can have any sign, but the absolute value of C1 is strictly less than C2
 
-		//Newton's method
-		for (let i = 0; i < 5; i++) {
-			let f = C1 * (Math.cosh(dH) - 1) + C2 * Math.sinh(dH) - dH - dM;
-			let df = C1 * Math.sinh(dH) + C2 * Math.cosh(dH) - 1;
+		let alpha = 0.5 * Math.log(Math.abs((C1 + C2) / (C1 - C2)));
+		let R = Math.sqrt(Math.abs(C1 * C1 - C2 * C2));
 
-			dH -= f / df;
+		// This part originally had 5 cases corresponding to different values of C1 and C2 when I was writing the code
+		// but the above conditions removed all but this one
+
+		let dH = -alpha;
+
+		for (let i = 0; i < 15; i++) {
+			dH = Math.asinh((C1 + dM + dH) / R) - alpha;
 		}
 
-		let r2 = a + (r - a) * Math.cosh(dH) + dot3(r0, v0) * Math.sqrt(-a / mu) * Math.sinh(dH);
+		let r2 = a + (r - a) * Math.cosh(dH) + Vector3.dot(r0, v0) * Math.sqrt(-a / mu) * Math.sinh(dH);
 
 		F = 1 - a / r * (1 - Math.cosh(dH));
-		G = a * dot3(r0, v0) / mu * (1 - Math.cosh(dH)) + r * Math.sqrt(-a / mu) * Math.sinh(dH);
+		G = a * Vector3.dot(r0, v0) / mu * (1 - Math.cosh(dH)) + r * Math.sqrt(-a / mu) * Math.sinh(dH);
 		Ft = -Math.sqrt(-mu * a) / (r2 * r) * Math.sinh(dH);
 		Gt = 1 - a / r2 * (1 - Math.cosh(dH));
 	}
 
 	return {
-		r: Vector3.add(mult3(r0, F),  mult3(v0, G)),
-		v: Vector3.add(mult3(r0, Ft), mult3(v0, Gt))
+		r: Vector3.add(Vector3.mult(r0, F),  Vector3.mult(v0, G)),
+		v: Vector3.add(Vector3.mult(r0, Ft), Vector3.mult(v0, Gt))
 	};
 }
