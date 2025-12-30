@@ -1,6 +1,7 @@
 import { System } from './system.js';
 import { Vector3 } from './vector.js';
 import { realRootsQuartic } from './polynomial.js';
+import { propagate } from './orbit.js';
 
 //Compute optimal MGA trajectories
 export class MGAFinder {
@@ -8,74 +9,289 @@ export class MGAFinder {
 		this.system = system;
 	}
 
-	Fa(planet1, planet2, index, t1, t2, relvel) {
-		let state1 = this.system.getState(planet1, t1);
-		let state2 = this.system.getState(planet2, t2);
-
-		let d1 = state1.r.norm;
-		let d2 = state2.r.norm;
-
-		let rdot = Vector3.dot(state1.r, state2.r);
-
-		let rdiff = Vector3.sub(state1.r, state2.r);
+	// Find initial velocities in the compatibility method.
+	findInitialVelocities(r1, v1, r2, rv, mu) {
+		let dist1 = r1.norm;
+		let dist2 = r2.norm;
+		let rdot = Vector3.dot(r1, r2);
+		let rdiff = Vector3.sub(r2, r1);
 		let c = rdiff.norm;
-
 		let uc = Vector3.normalize(rdiff);
-		let ui = Vector3.normalize(state1.r);
+		let ui = Vector3.normalize(r1);
 
-		let Kh = this.system.rootmu * c / (d1 * d2 + rdot);
+		let Kh = mu * c / (dist1 * dist2 + rdot);
 
-		if (Kh === 0) {
-			return 0;
+		if ((Kh === 0) || ((dist1 * dist2 + rdot) === 0)) {
+			// n-pi transfer - there are an infinite number of possible velocities.
+			// This is handled elsewhere.
+			return [];
 		}
 
-		let P = -2 * Vector3.dot(ui, state1.v);
-		let Q = Vector3.dot(state1.v, state1.v) - relvel * relvel + 2 * Kh * Vector3.dot(ui, uc);
-		let R = -2 * Kh * Vector3.dot(uc, state1.v);
-		let S = Kh * Kh;
+		let rootKh = Math.sqrt(Kh);
 
-		if (!Math.isFinite(P) || !Math.isFinite(Q) || !Math.isFinite(R) || !Math.isFinite(S)) {
-			return Infinity;
-		}
+		let P = -2 * Vector3.dot(ui, v1) / rootKh;
+		let Q = Vector3.dot(v1, v1) / Kh - rv * rv / Kh + 2 * Vector3.dot(ui, uc);
+		let R = -2 * Vector3.dot(uc, v1) / rootKh;
+		let S = 1;
 
 		let vps = realRootsQuartic(P, Q, R, S);
 
-		if (index >= vps.length) {
+		let vels = [];
+
+		for (let i = 0; i < vps.length; i++) {
+			if (vps[i] === 0) {
+				continue;
+			}
+
+			vels.push(Vector3.add(
+				Vector3.mult(ui, rootKh * vps[i]),
+				Vector3.mult(uc, rootKh / vps[i])
+			));
+		}
+
+		return vels;
+	}
+
+	Fa(r1, vout, r2, t1, t2, mu) {
+		let rdiff = Vector3.sub(r2, r1);
+		let uc = Vector3.normalize(rdiff);
+		let ui = Vector3.normalize(r1);
+		let u = Vector3.add(ui, uc);
+
+		let dist1 = r1.norm;
+		let dist2 = r2.norm;
+		let vel1 = vout.norm;
+
+		let energy = vel1 * vel1 / 2 - mu / dist1;
+		let sma = -mu / 2 / energy;
+
+		let h = Vector3.cross(r1, vout).norm;
+		let p = h * h / mu;
+
+		let rvdot = Vector3.dot(r1, vout);
+
+		let cosdE = 1 - (dist1 * dist2 - Vector3.dot(r1, r2)) / (sma * p);
+		let sindE = Math.sqrt(Math.abs(1 - cosdE * cosdE));
+
+		let dE;
+
+		let cosdTheta = Vector3.dot(r1, r2) / dist1 / dist2;
+
+		if (energy < 0) {
+			// Elliptical case
+
+			//   cos(dEa)
+			// = 1 - (1 - cos(dEa))
+			// = 1 - (1 - cos(dEa))(1 - e^2) / (1 - e^2)
+			// = 1 - ((1 - e^2) - (1 - e^2)cos(dEa)) / (1 - e^2)
+			// = 1 - ((1 - e^2) + (e^2 - 1)cos(dEa)) / (1 - e^2)
+			// = 1 - (1 - e^2 + e^2cos(dEa) - cos(dEa)) / (1 - e^2)
+			// = 1 - (1 - e^2 + e^2cos(E0)cos(E1) + e^2sin(E0)sin(E1) - cos(E0)cos(E1) - sin(E0)sin(E1)) / (1 - e^2)
+			// = 1 - (1 - e^2 - ecos(E0) - ecos(E1) + e^2cos(E0)cos(E1) + ecos(E0) + ecos(E1) + e^2sin(E0)sin(E1) - cos(E0)cos(E1) - sin(E0)sin(E1)) / (1 - e^2)
+			// = 1 - ((1 - ecos(E0)) - ecos(E1)(1 - ecos(E0)) - e^2 + ecos(E0) + ecos(E1) + e^2sin(E0)sin(E1) - cos(E0)cos(E1) - sin(E0)sin(E1)) / (1 - e^2)
+			// = 1 - ((1 - ecos(E0))(1 - ecos(E1)) - e^2 + ecos(E0) + ecos(E1) + e^2sin(E0)sin(E1) - cos(E0)cos(E1) - sin(E0)sin(E1)) / (1 - e^2)
+			// = 1 - (r0r1 / a^2 - e^2 + ecos(E0) + ecos(E1) + e^2sin(E0)sin(E1) - cos(E0)cos(E1) - sin(E0)sin(E1)) / (1 - e^2)
+			// = 1 - (r0r1 / a^2 - e^2 + ecos(E0) + ecos(E1) - cos(E0)cos(E1) - (1 - e^2)sin(E0)sin(E1)) / (1 - e^2)
+			// = 1 - (r0r1 / a^2 - (e^2 - ecos(E0) - ecos(E1) + cos(E0)cos(E1)) - (1 - e^2)sin(E0)sin(E1)) / (1 - e^2)
+			// = 1 - (r0r1 / a^2 - (e^2 - ecos(E1) + cos(E0)cos(E1) - ecos(E0)) - (1 - e^2)sin(E0)sin(E1)) / (1 - e^2)
+			// = 1 - (r0r1 / a^2 - (e(e - cos(E1)) + cos(E0)(cos(E1) - e)) - (1 - e^2)sin(E0)sin(E1)) / (1 - e^2)
+			// = 1 - (r0r1 / a^2 - (cos(E0) - e)(cos(E1) - e) - (1 - e^2)sin(E0)sin(E1)) / (1 - e^2)
+			// = 1 - (r0r1 / a^2 - (cos(E0) - e)(cos(E1) - e) - b^2 * sin(E0)sin(E1) / a^2) / (1 - e^2)
+			// = 1 - (r0r1 / a^2 - a * (cos(E0) - e) * a * (cos(E1) - e) / a^2 - b^2 * sin(E0)sin(E1) / a^2) / (1 - e^2)
+			// = 1 - (r0r1 - a * (cos(E0) - e) * a * (cos(E1) - e) - b^2 * sin(E0)sin(E1)) / (a^2 * (1 - e^2))
+			// = 1 - (r0r1 - a * (cos(E0) - e) * a * (cos(E1) - e) - b^2 * sin(E0)sin(E1)) / (ap)
+			// = 1 - (r0r1 - x0 * x1 - y0 * y1) / (ap)
+			// 
+			// +================ Finding dEa ================+
+			// | cos(dEa) = 1 - (r0*r1 - dot(r0, r1)) / (ap) |
+			// +=============================================+
+
+			if ((dist1 * dist2 - Vector3.dot(r1, r2)) > (dist1 + dist2) * p) {
+				sindE *= -1;
+			}
+
+			if (Vector3.dot(vout, u) < 0) {
+				sindE *= -1;
+			}
+
+			dE = Math.atan2(sindE, cosdE);
+			if (dE < 0) {
+				dE += 2 * Math.PI;
+			}
+		} else {
+			// Hyperbolic case
+
+			// cosh(dF)
+			// = 1 - (1 - cosh(dF))
+			// = 1 - (1 - cosh(dF))(e^2 - 1) / (e^2 - 1)
+			// = 1 - (e^2 - 1 - (e^2 - 1)cosh(dF)) / (e^2 - 1)
+			// = 1 - (e^2 - 1 - e^2 * cosh(dF) + cosh(dF)) / (e^2 - 1)
+			// = 1 - (e^2 - 1 - e^2 * cosh(F0)cosh(F1) + e^2sinh(F0)sinh(F1) + cosh(F0)cosh(F1) - sinh(F0)sinh(F1)) / (e^2 - 1)
+			// = 1 - (e^2 - 1 - e^2 * cosh(F0)cosh(F1) + cosh(F0)cosh(F1) + (e^2 - 1)sinh(F0)sinh(F1)) / (e^2 - 1)
+			// = 1 - (e^2 - 1 - ecosh(F0) - ecosh(F1) - e^2 * cosh(F0)cosh(F1) + ecosh(F0) + ecosh(F1) + cosh(F0)cosh(F1) + (e^2 - 1)sinh(F0)sinh(F1)) / (e^2 - 1)
+			// = 1 - (e^2 - ecosh(F0) - ecosh(F1) + cosh(F0)cosh(F1) - 1 + ecosh(F0) + ecosh(F1) - e^2 * cosh(F0)cosh(F1) + (e^2 - 1)sinh(F0)sinh(F1)) / (e^2 - 1)
+			// = 1 - ((e - cosh(F0))(e - cosh(F1)) - 1 + ecosh(F0) + ecosh(F1) - e^2 * cosh(F0)cosh(F1) + (e^2 - 1)sinh(F0)sinh(F1)) / (e^2 - 1)
+			// = 1 - ((e - cosh(F0))(e - cosh(F1)) - (1 - ecosh(F0))(1 - ecosh(F1)) + (e^2 - 1)sinh(F0)sinh(F1)) / (e^2 - 1)
+			// = 1 - ((e - cosh(F0))(e - cosh(F1)) - r0 * r1 / a^2 + (e^2 - 1)sinh(F0)sinh(F1)) / (e^2 - 1)
+			// = 1 - ((e - cosh(F0))(e - cosh(F1)) - r0 * r1 / a^2 + b^2*sinh(F0)sinh(F1)/a^2) / (e^2 - 1)
+			// = 1 - (a * (e - cosh(F0)) * a * (e - cosh(F1)) - r0 * r1 + b^2*sinh(F0)sinh(F1)) / (a^2 * (e^2 - 1))
+			// = 1 - (a * (cosh(F0) - e) * a * (cosh(F1) - e) - r0 * r1 + b^2*sinh(F0)sinh(F1)) / (a^2 * (e^2 - 1))
+			// = 1 - (x0 * x1 - r0 * r1 + y0 * y1) / (a^2 * (e^2 - 1))
+			// = 1 - (dot(r0, r1) - r0 * r1) / (a^2 * (e^2 - 1))
+			// = 1 - (r0 * r1 - dot(r0, r1)) / (a^2 * (1 - e^2))
+			// 
+			// +================ Finding dF =================+
+			// | cosh(dF) = 1 - (r0*r1 - dot(r0, r1)) / (ap) |
+			// +=============================================+
+
+			// Because this formula is the exact same as for the elliptic case, cosh(dF)
+			// will be in the variable cosdE.
+
+			// TO-DO: check if code is correct.
+			let dTheta = Math.acos(cosdTheta);
+			if (Vector3.dot(vout, u) < 0) {
+				dTheta = 2 * Math.PI - dTheta;
+			}
+
+			let eccentricity = Math.sqrt(1 - p / sma);
+			let f = Math.acos((p / dist1 - 1) / eccentricity);
+
+			if (rvdot < 0) {
+				f *= -1;
+			}
+
+			let maxdTheta = Math.acos(-1 / eccentricity) - f;
+			if (dTheta > maxdTheta) {
+				return -Infinity;
+			}
+
+			dE = Math.asinh(sindE);
+		}
+
+		// This formula is slightly different than the one in Gavira-Aladro and Bombardelli (2024), but it gives the same answer
+		let dt = sma * Math.sqrt(Math.abs(sma) / mu) * (rvdot * (1 - cosdE) / Math.sqrt(mu * Math.abs(sma)) - (1 - dist1 / sma) * sindE + dE);
+
+		return t2 - t1 - dt;
+	}
+
+	Ga(r1, vout, mu) {
+		let dist1 = r1.norm;
+		let vel = vout.norm;
+
+		let energy = vel * vel / 2 - mu / dist1;
+
+		if (energy >= 0) {
 			return Infinity;
 		}
 
-		let vp = vps[index];
-		let vel = Vector3.add(Vector3.mult(ui, vp), Vector3.mult(uc, Kh / vp));
+		let sma = -mu / 2 / energy;
 
-		let h = Vector3.cross(state1.r, vel).norm;
-		let p = h * h / this.system.rootmu;
-		let sma = 1 / (2 / d1 - Vector3.dot(vel, vel) / this.system.rootmu);
+		return 2 * Math.PI * sma * Math.sqrt(sma / mu);
+	}
 
-		if (sma < 0) {
-			return Infinity;
+	findTransfersInt(r1, v1, orbit, t1, rv, mu) {
+		const discretizationSteps = 100;
+		const epsilon = 1e-3;
+
+		let period = orbit.period;
+
+		let fas = [[], [], [], []];
+		let gas = [[], [], [], []];
+
+		for (let i = 0; i < discretizationSteps; i++) {
+			let t2 = t1 + period * i / discretizationSteps;
+
+			let state2 = orbit.getState(t2);
+			let vels = this.findInitialVelocities(r1, v1, state2.r, rv, mu);
+
+			for (let j = 0; j < vels.length; j++) {
+				let fa = this.Fa(r1, vels[j], state2.r, t1, t2, mu);
+				let ga = this.Ga(r1, vels[j], mu);
+
+				fas[j].push(fa);
+				gas[j].push(ga);
+			}
+
+			for (let j = vels.length; j < 4; j++) {
+				fas[j].push(null);
+				gas[j].push(null);
+			}
 		}
 
-		let cosdTheta = rdot / d1 / d2;
-		let sindTheta = Math.sqrt(1 - cosdTheta * cosdTheta);
+		let out = [];
 
-		if (vp < 0) {
-			sindTheta *= -1;
+		for (let i = 0; i < 4; i++) {
+			for (let M = 0; M < 10; M++) {
+				for (let N = 0; N < 10; N++) {
+					for (let j = 0; j < discretizationSteps - 1; j++) {
+						if (!Number.isFinite(fas[i][j])) continue;
+						if (!Number.isFinite(gas[i][j])) continue;
+						if (!Number.isFinite(fas[i][j + 1])) continue;
+						if (!Number.isFinite(gas[i][j + 1])) continue;
+
+						let compat = fas[i][j] + N * period - M * gas[i][j];
+						let compatnext = fas[i][j + 1] + N * period - M * gas[i][j + 1];
+
+						if (compat * compatnext > 0) continue;
+
+						let lowx = t1 + period * (j / discretizationSteps + N);
+						let lowy = compat;
+
+						let highx = t1 + period * ((j + 1) / discretizationSteps + N);
+						let highy = compatnext;
+
+						let mid, midy;
+
+						let vels;
+
+						// Bisection
+						for (let k = 0; k < 10; k++) {
+							mid = (lowx + highx) / 2;
+
+							let state2 = orbit.getState(mid);
+							vels = this.findInitialVelocities(r1, v1, state2.r, rv, mu);
+
+							if (i >= vels.length) break;
+
+							let fa = this.Fa(r1, vels[i], state2.r, t1, mid, mu);
+							let ga = this.Ga(r1, vels[i], mu);
+
+							midy = fa - M * ga;
+
+							if (midy * lowy > 0) {
+								lowx = mid;
+								lowy = midy;
+							} else {
+								highx = mid;
+								highy = midy;
+							}
+						}
+
+						let state2 = orbit.getState(mid);
+
+						let outgoing = Vector3.sub(vels[i], v1);
+						let incoming = Vector3.sub(propagate(r1, vels[i], mid - t1, mu).v, state2.v);
+
+						out.push({
+							t2: mid,
+							outgoing: outgoing,
+							incoming: incoming,
+							incomingmag: incoming.norm
+						});
+					}
+				}
+			}
 		}
 
-		let cosEa = 1 - (d1 * d2 - rdot) / (p * sma);
-		let Ea = Math.acos(Ea);
+		return out;
+	}
 
-		if (vp < 0) {
-			Ea *= -1;
-		}
-		if ((d1 * d2 - rdot) > (d1 + d2) * p) {
-			Ea *= -1;
-		}
+	// Find no-DSM transfers betweem two planets.
+	findTransfersNoDSM(planet1, planet2, t1, rv) {
+		let state1 = this.system.getDState(planet1, t1);
 
-		let secsperradian = Math.sqrt(sma * sma * sma / this.system.rootmu);
+		let parent = this.system.bodies[this.system.bodymap.get(planet1)].parent;
 
-		let ta = secsperradian * (Ea - Math.sin(Ea)) + d1 * d2 / Math.sqrt(this.system.rootmu * p) * sindTheta;
-
-		return t2 - t1 - ta;
+		return this.findTransfersInt(state1.r, state1.v, this.system.bodies[this.system.bodymap.get(planet2)].orbit, t1, rv, this.system.bodies[this.system.bodymap.get(parent)].gravparameter);
 	}
 };

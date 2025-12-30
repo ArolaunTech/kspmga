@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { System } from './system.js';
+import { MGAFinder } from './mga.js';
 
 const SCALE = 1e-9;
 const mindist = 0.1;
@@ -19,8 +20,13 @@ renderer.setSize(canvas.width, canvas.height);
 renderer.setAnimationLoop(animate);
 
 let groups = [];
+let mgafinder;
 let system = new System("../data/systems/stock.json", (sys) => {
 	groups = sys.fillScene(scene, SCALE, canvas.width, canvas.height);
+	mgafinder = new MGAFinder(sys);
+
+	// Test: Kerbin to Eve starting at 12636864 seconds with a rel. vel of 960 m/s
+	console.log(mgafinder.findTransfersNoDSM("Kerbin", "Eve", 12636864, 960));
 });
 
 camera.position.z = 5;

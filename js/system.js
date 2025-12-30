@@ -60,6 +60,18 @@ export class System {
 		return 0;
 	}
 
+	getDState(name, time) {
+		// state - state of parent
+		let bodyindex = this.bodymap.get(name);
+		let body = this.bodies[bodyindex];
+
+		if (body.root) {
+			return {r: new Vector3(0, 0, 0), v: new Vector3(0, 0, 0)};
+		}
+
+		return body.orbit.getState(time);
+	}
+
 	getState(name, time) {
 		let bodyindex = this.bodymap.get(name);
 		let body = this.bodies[bodyindex];

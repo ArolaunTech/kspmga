@@ -291,12 +291,14 @@ export function propagate(r0, v0, tof, mu) {
 	let r = r0.norm;
 	let v = v0.norm;
 
+	let rvdot = Vector3.dot(r0, v0);
+
 	let energy = (v * v / 2 - mu / r);
 	let a = -mu / 2 / energy;
 
 	let dM = Math.sqrt(Math.abs(mu / (a * a * a))) * tof;
 
-	let C1 = Vector3.dot(r0, v0) / Math.sqrt(Math.abs(mu * a));
+	let C1 = rvdot / Math.sqrt(Math.abs(mu * a));
 	let C2 = 1 - r / a;
 
 	let F, G, Ft, Gt;
@@ -334,10 +336,10 @@ export function propagate(r0, v0, tof, mu) {
 			dE -= f / df;
 		}
 
-		let r2 = a + (r - a) * Math.cos(dE) + Vector3.dot(r0, v0) * Math.sqrt(a / mu) * Math.sin(dE);
+		let r2 = a + (r - a) * Math.cos(dE) + rvdot * Math.sqrt(a / mu) * Math.sin(dE);
 
 		F = 1 - a / r * (1 - Math.cos(dE));
-		G = a * Vector3.dot(r0, v0) / mu * (1 - Math.cos(dE)) + r * Math.sqrt(a / mu) * Math.sin(dE);
+		G = a * rvdot / mu * (1 - Math.cos(dE)) + r * Math.sqrt(a / mu) * Math.sin(dE);
 		Ft = -Math.sqrt(mu * a) / (r2 * r) * Math.sin(dE);
 		Gt = 1 - a / r2 * (1 - Math.cos(dE));
 	} else {
@@ -366,8 +368,8 @@ export function propagate(r0, v0, tof, mu) {
 		// C2 > 0 since the orbit is hyperbolic, dM > 0 since tof > 0 in this part of the function
 		// C1 can have any sign, but the absolute value of C1 is strictly less than C2
 
-		let alpha = 0.5 * Math.log(Math.abs((C1 + C2) / (C1 - C2)));
-		let R = Math.sqrt(Math.abs(C1 * C1 - C2 * C2));
+		let alpha = 0.5 * Math.log((C2 + C1) / (C2 - C1));
+		let R = Math.sqrt(C2 * C2 - C1 * C1);
 
 		// This part originally had 5 cases corresponding to different values of C1 and C2 when I was writing the code
 		// but the above conditions removed all but this one
@@ -378,10 +380,10 @@ export function propagate(r0, v0, tof, mu) {
 			dH = Math.asinh((C1 + dM + dH) / R) - alpha;
 		}
 
-		let r2 = a + (r - a) * Math.cosh(dH) + Vector3.dot(r0, v0) * Math.sqrt(-a / mu) * Math.sinh(dH);
+		let r2 = a + (r - a) * Math.cosh(dH) + rvdot * Math.sqrt(-a / mu) * Math.sinh(dH);
 
 		F = 1 - a / r * (1 - Math.cosh(dH));
-		G = a * Vector3.dot(r0, v0) / mu * (1 - Math.cosh(dH)) + r * Math.sqrt(-a / mu) * Math.sinh(dH);
+		G = a * rvdot / mu * (1 - Math.cosh(dH)) + r * Math.sqrt(-a / mu) * Math.sinh(dH);
 		Ft = -Math.sqrt(-mu * a) / (r2 * r) * Math.sinh(dH);
 		Gt = 1 - a / r2 * (1 - Math.cosh(dH));
 	}

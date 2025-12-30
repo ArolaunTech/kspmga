@@ -33,7 +33,7 @@ export class Vector3 {
 		return new Vector3(a.x * b, a.y * b, a.z * b);
 	}
 
-	static normalize3(a) {
+	static normalize(a) {
 		return Vector3.mult(a, 1 / a.norm);
 	}
 };

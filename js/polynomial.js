@@ -396,6 +396,8 @@ export function realRootsQuartic(p, q, r, s) {
 	let out = [];
 
 	for (let i = 0; i < 4; i++) {
+		//console.log(roots[i]);
+
 		if (Math.abs(roots[i].b) < 1e-10) {
 			out.push(roots[i].a);
 		}
