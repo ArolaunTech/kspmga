@@ -4,6 +4,11 @@ import { realRootsQuartic } from './polynomial.js';
 import { propagate } from './orbit.js';
 
 //Compute optimal MGA trajectories
+function infmult(M, ga) {
+	if (M === 0) return 0;
+	return M * ga;
+}
+
 export class MGAFinder {
 	constructor(system) {
 		this.system = system;
@@ -198,15 +203,31 @@ export class MGAFinder {
 		let fas = [[], [], [], []];
 		let gas = [[], [], [], []];
 
+		let found = 0;
+
+		let minfas = [Infinity, Infinity, Infinity, Infinity];
+		let mingas = [Infinity, Infinity, Infinity, Infinity];
+		let maxfas = [-Infinity, -Infinity, -Infinity, -Infinity];
+		let maxgas = [-Infinity, -Infinity, -Infinity, -Infinity];
+
 		for (let i = 0; i < discretizationSteps; i++) {
 			let t2 = t1 + period * i / discretizationSteps;
 
 			let state2 = orbit.getState(t2);
 			let vels = this.findInitialVelocities(r1, v1, state2.r, rv, mu);
 
+			if (vels.length > found) {
+				found = vels.length;
+			}
+
 			for (let j = 0; j < vels.length; j++) {
 				let fa = this.Fa(r1, vels[j], state2.r, t1, t2, mu);
 				let ga = this.Ga(r1, vels[j], mu);
+
+				if ((fa > maxfas[j]) && Number.isFinite(fa)) maxfas[j] = fa;
+				if (ga > maxgas[j]) maxgas[j] = ga;
+				if ((fa < minfas[j]) && Number.isFinite(fa)) minfas[j] = fa;
+				if (ga < mingas[j]) mingas[j] = ga;
 
 				fas[j].push(fa);
 				gas[j].push(ga);
@@ -220,17 +241,26 @@ export class MGAFinder {
 
 		let out = [];
 
-		for (let i = 0; i < 4; i++) {
-			for (let M = 0; M < 10; M++) {
-				for (let N = 0; N < 10; N++) {
+		for (let i = 0; i < found; i++) {
+			for (let N = 0; N < 10; N++) {
+				for (let M = 0; M < 10; M++) {
+					let mincompat = minfas[i] + N * period - infmult(M, maxgas[i]);
+					let maxcompat = maxfas[i] + N * period - infmult(M, mingas[i]);
+
+					if (mincompat > 0) continue;
+					if (maxcompat < 0) break;
+
 					for (let j = 0; j < discretizationSteps - 1; j++) {
 						if (!Number.isFinite(fas[i][j])) continue;
-						if (!Number.isFinite(gas[i][j])) continue;
 						if (!Number.isFinite(fas[i][j + 1])) continue;
-						if (!Number.isFinite(gas[i][j + 1])) continue;
 
-						let compat = fas[i][j] + N * period - M * gas[i][j];
-						let compatnext = fas[i][j + 1] + N * period - M * gas[i][j + 1];
+						if (gas[i][j] === null) continue;
+						if (gas[i][j + 1] === null) continue;
+
+						if ((M > 0) && !(Number.isFinite(gas[i][j]) && Number.isFinite(gas[i][j + 1]))) continue;
+
+						let compat = fas[i][j] + N * period - infmult(M, gas[i][j]);
+						let compatnext = fas[i][j + 1] + N * period - infmult(M, gas[i][j + 1]);
 
 						if (compat * compatnext > 0) continue;
 
@@ -256,7 +286,7 @@ export class MGAFinder {
 							let fa = this.Fa(r1, vels[i], state2.r, t1, mid, mu);
 							let ga = this.Ga(r1, vels[i], mu);
 
-							midy = fa - M * ga;
+							midy = fa - infmult(M, ga);
 
 							if (midy * lowy > 0) {
 								lowx = mid;
