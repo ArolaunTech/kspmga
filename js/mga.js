@@ -270,13 +270,15 @@ export class MGAFinder {
 						let highx = t1 + period * ((j + 1) / discretizationSteps + N);
 						let highy = compatnext;
 
-						let mid, midy;
+						let mid;
+						let midy = 2;
 
 						let vels;
 
-						// Bisection
-						for (let k = 0; k < 10; k++) {
-							mid = (lowx + highx) / 2;
+						// Regula falsi
+						for (let k = 0; (k < 10) && Math.abs(midy) >= 1; k++) {
+							let slope = (highy - lowy) / (highx - lowx);
+							mid = lowx - lowy / slope;
 
 							let state2 = orbit.getState(mid);
 							vels = this.findInitialVelocities(r1, v1, state2.r, rv, mu);
@@ -296,6 +298,8 @@ export class MGAFinder {
 								highy = midy;
 							}
 						}
+
+						//console.log(mid, midy);
 
 						let state2 = orbit.getState(mid);
 

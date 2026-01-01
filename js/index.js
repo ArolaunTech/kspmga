@@ -27,10 +27,12 @@ let system = new System("../data/systems/stock.json", (sys) => {
 
 	// Test: Kerbin to Eve starting at 12636864 seconds with a rel. vel of 960 m/s
 	let start = performance.now();
-	for (let i = 0; i < 1; i++) {
+	const runs = 1;
+
+	for (let i = 0; i < runs; i++) {
 		console.log(mgafinder.findTransfersNoDSM("Kerbin", "Eve", 12636864, 960));
 	}
-	console.log((performance.now() - start) / 1);
+	console.log((performance.now() - start) / runs);
 });
 
 camera.position.z = 5;
