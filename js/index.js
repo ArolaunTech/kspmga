@@ -2,7 +2,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { System } from './system.js';
 import { MGAFinder } from './mga.js';
+import { secsToKerbalTimeString } from './kerbaltime.js';
 
+// Render
 const SCALE = 1e-9;
 const mindist = 0.1;
 const maxdist = 1000;
@@ -38,13 +40,25 @@ let system = new System("../data/systems/stock.json", (sys) => {
 camera.position.z = 5;
 controls.update();
 
+// Inputs
 let time = 0;
+let needsupdate = true;
+
+const timeslider = document.getElementById("timeslider");
+const timedisplay = document.getElementById("timelabel");
+
+timeslider.oninput = function() {
+	timedisplay.innerText = secsToKerbalTimeString(this.value);
+	time = this.value;
+	needsupdate = true;
+}
+
 function animate() {
 	controls.update();
 	renderer.render(scene, camera);
 
-	if (system.ready) {
+	if (system.ready && needsupdate) {
 		system.updateScene(groups, SCALE, time);
-		time += 200;
+		needsupdate = false;
 	}
 }

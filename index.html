@@ -13,7 +13,19 @@
 		<link rel="stylesheet" href="css/index.css"/>
 	</head>
 	<body>
-		<canvas width="640" height="480" id="system">Solar system view</canvas>
+		<noscript>
+			<h1 class="loud">
+				You need Javascript enabled to run this!
+			</h1>
+		</noscript>
+		<div id="orbitview">
+			<h3>Orbital view</h3>
+			<hr/>
+			<canvas width="640" height="480" id="system">Solar system view</canvas>
+			<p class="centerheader">Time</p>
+			<input type="range" min="0" max="9201600" step="any" value="0" class="slider" id="timeslider"/>
+			<p id="timelabel">Year 1, Day 1 00:00:00</p>
+		</div>
 
 		<script type="module" src="js/random.js"></script>
 		<script type="module" src="js/color.js"></script>

@@ -21,7 +21,7 @@ export function secsToKerbalTimeString(secs) {
 	let time = secsToKerbalTime(secs);
 
 	let stringminutes = String(time[3]);
-	let stringseconds = String(time[4]);
+	let stringseconds = String(Math.round(time[4]));
 
 	if (stringminutes.length === 1) {
 		stringminutes = '0' + stringminutes;
