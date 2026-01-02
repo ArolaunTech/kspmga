@@ -328,4 +328,25 @@ export class MGAFinder {
 
 		return this.findTransfersInt(state1.r, state1.v, this.system.bodies[this.system.bodymap.get(planet2)].orbit, t1, rv, this.system.bodies[this.system.bodymap.get(parent)].gravparameter);
 	}
+
+	planMGATrajectory(sequence, initalt, finalalt, minvinf, maxvinf, maxdvdsm, maxduration, maxrevs, earliesttime, latesttime, includecapture) {
+		let fullsequence = [];
+		for (let i = 0; i < sequence.length; i++) {
+			fullsequence.push(this.system.abbreviations.get(sequence[i]));
+		}
+
+		let trueinitalt = this.system.bodies[this.system.bodymap.get(fullsequence[0])].radius + initalt;
+		let truefinalalt = this.system.bodies[this.system.bodymap.get(fullsequence[fullsequence.length - 1])].radius + finalalt;
+
+		let truelatesttime = latesttime;
+		if (latesttime === Infinity) {
+			truelatesttime = earliesttime + 1e9; // About 10 years
+		}
+
+		console.log(fullsequence, trueinitalt, truefinalalt, minvinf, maxvinf, maxdvdsm, maxduration, maxrevs, earliesttime, truelatesttime, includecapture);
+
+		for (let i = 0; i < 1000; i++) {
+			
+		}
+	}
 };

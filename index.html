@@ -49,31 +49,93 @@
 					<div class="inputcol">
 						<div class="controlgroup">
 							<label for="sequence" class="controllabel">Flyby sequence</label>
-							<input type="text" name="sequence" id="sequence"/>
+							<input type="text" name="sequence" id="sequence" pattern="^([a-zA-z]+-)+[a-zA-z]+$" value="K-E" required/>
 						</div>
 						<div class="controlgroup">
 							<label for="initalt" class="controllabel">Initial altitude</label>
-							<input type="text" name="initalt" id="initalt"/>
+							<input type="number" name="initalt" id="initalt" min="0" step="any" value="100" required/>
 							<label for="initalt">km ASL</label>
 						</div>
 						<div class="controlgroup">
 							<label for="finalalt" class="controllabel">Final altitude</label>
-							<input type="text" name="finalalt" id="finalalt"/>
+							<input type="number" name="finalalt" id="finalalt" min="0" step="any" value="100" required/>
 							<label for="finalalt">km ASL</label>
 						</div>
 						<div class="controlgroup">
 							<label for="minvinf" class="controllabel">Min. ejection v<sub>&infin;</sub></label>
-							<input type="text" name="maxvinf" id="minvinf"/>
+							<input type="number" name="minvinf" id="minvinf" min="0" step="any" value="500" required/>
 							<label for="minvinf">m/s</label>
 						</div>
 						<div class="controlgroup">
 							<label for="maxvinf" class="controllabel">Max. ejection v<sub>&infin;</sub></label>
-							<input type="text" name="maxvinf" id="maxvinf"/>
+							<input type="number" name="maxvinf" id="maxvinf" min="0" step="any" value="4000" required/>
 							<label for="maxvinf">m/s</label>
+						</div>
+						<div class="controlgroup">
+							<label for="maxdvdsm" class="controllabel">Max. Δv per DSM</label>
+							<input type="number" name="maxdvdsm" id="maxdvdsm" min="0" step="any" value="100" required/>
+							<label for="maxdvdsm">m/s</label>
+						</div>
+					</div>
+					<div class="inputcol">
+						<div class="controlgroup">
+							<label for="maxduration" class="controllabel">Max. duration</label>
+							<input type="number" name="maxduration" id="maxduration" min="0" step="any"/>
+							<label for="maxduration">days</label>
+						</div>
+						<div class="controlgroup">
+							<label for="maxrevs" class="controllabel">Max. revolutions</label>
+							<input type="number" name="maxrevs" id="maxrevs" min="0" max="20" value="10" step="any" required/>
+						</div>
+						<div class="controlgroup">
+							<label class="controllabel">Earliest departure</label>
+							<div class="timegroup">
+								<div class="timeinputcontainer">
+									<label class="timetypelabel">Year</label>
+									<input type="number" min="1" value="1" step="any" id="earliestyear" class="timeinput" required/>
+								</div>
+							</div>
+							<div class="timegroup">
+								<div class="timeinputcontainer">
+									<label class="timetypelabel">Day</label>
+									<input type="number" min="1" max="426" value="1" step="any" id="earliestday" class="timeinput" required/>
+								</div>
+							</div>
+							<div class="timegroup">
+								<div class="timeinputcontainer">
+									<label class="timetypelabel">Hour</label>
+									<input type="number" min="0" max="5" value="0" step="any" id="earliesthour" class="timeinput" required/>
+								</div>
+							</div>
+						</div>
+						<div class="controlgroup">
+							<label class="controllabel">Latest departure</label>
+							<div class="timegroup">
+								<div class="timeinputcontainer">
+									<label class="timetypelabel">Year</label>
+									<input type="number" min="1" value="1" step="any" id="latestyear" class="timeinput"/>
+								</div>
+							</div>
+							<div class="timegroup">
+								<div class="timeinputcontainer">
+									<label class="timetypelabel">Day</label>
+									<input type="number" min="1" max="426" value="1" step="any" id="latestday" class="timeinput"/>
+								</div>
+							</div>
+							<div class="timegroup">
+								<div class="timeinputcontainer">
+									<label class="timetypelabel">Hour</label>
+									<input type="number" min="0" max="5" value="0" step="any" id="latesthour" class="timeinput"/>
+								</div>
+							</div>
+						</div>
+						<div class="controlgroup">
+							<label for="includecapture" class="controllabel">Include insertion in Δv calculation?</label>
+							<input type="checkbox" name="includecapture" id="includecapture"/>
 						</div>
 					</div>
 				</div>
-				<br/>
+				<p id="errormsg"></p>
 				<div class="centered startsearchbox">
 					<button id="startsearch">Search trajectories</button>
 				</div>
@@ -84,11 +146,32 @@
 			<hr/>
 			<h3>v<sub>&infin;</sub></h3>
 			<hr/>
-			<img src="https://arolauntech.github.io/kspmga/imgs/vinf.jpg" alt="Plot of velocity at infinity verses ejection delta-v"/>
+			<div class="centered">
+				<img 
+					src="https://arolauntech.github.io/kspmga/imgs/vinf.jpg" 
+					alt="Plot of velocity at infinity verses ejection delta-v"
+				/>
+			</div>
 
 			<br/>
-			<h2>References</h2>
+			<h2>Acknowledgments</h2>
 			<hr/>
+			<ul>
+				<li>The design of the site is inspired by <a href="https://forum.kerbalspaceprogram.com/topic/33568-winmaclinux-ksp-trajectory-optimization-tool-v1610-major-lvd-improvements/">KSPTOT</a> and <a href="https://nmisyats.github.io/KSP-MGA-Planner/">Krafpy's MGA Planner</a>.</li>
+				<li>This project uses <a href="https://threejs.org">THREE.js</a> and code from ESA's <a href="https://esa.github.io/pykep/">pykep</a> library.</li>
+			</ul>
+			<h4>References:</h4>
+			<ul>
+				<li>Numerous Wikipedia pages, including those on <a href="https://en.wikipedia.org/wiki/Bairstow%27s_method">Bairstow's method</a>, <a href="https://en.wikipedia.org/wiki/Hyperbolic_functions">hyperbolic trig</a>, and <a href="https://en.wikipedia.org/wiki/Hyperbolic_trajectory">hyperbolic trajectories</a>.</li>
+				<li><a href="https://orbital-mechanics.space/intro.html">orbital-mechanics.space</a> for their excellent guide on orbital mechanics</li>
+				<li><a href="https://space.stackexchange.com/questions/45961/keplers-equation-written-in-change-in-eccentric-anomaly">This StackExchange post</a></li>
+				<li><a href="https://github.com/esa/pykep/blob/master/include/keplerian_toolbox/core_functions/propagate_lagrangian.hpp">pykep's source code</a></li>
+				<li><a href="https://alexmoon.github.io/ksp/">alexmoon's Transfer Window Planner</a> and <a href="https://ens-gijs.github.io/ksp/">ens's modification</a></li>
+				<li><a href="https://nmisyats.github.io/KSP-MGA-Planner/">Krafpy's MGA Planner</a></li>
+				<li><a href="https://forum.kerbalspaceprogram.com/topic/33568-winmaclinux-ksp-trajectory-optimization-tool-v1610-major-lvd-improvements/#comment-454695">Arrowstar's KSPTOT</a></li>
+				<li><a href="https://kerbal-transfer-illustrator.netlify.app/">Astrogoth's Kerbal Transfer Illustrator</a></li>
+			</ul>
+			<p>(WIP - tell me to include the papers too)</p>
 		</div>
 
 		<script type="module" src="js/random.js"></script>
