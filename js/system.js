@@ -93,7 +93,7 @@ export class System {
 		let groups = [];
 
 		const loader = new THREE.TextureLoader();
-		const texture = loader.load('../sprites/circle.png');
+		const texture = loader.load('https://arolauntech.github.io/kspmga/sprites/circle.png');
 
 		for (let i = 0; i < numbodies; i++) {
 			groups.push(new THREE.Group());
