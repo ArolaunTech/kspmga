@@ -48,18 +48,28 @@
 				<div id="inputgrid">
 					<div class="inputcol">
 						<div class="controlgroup">
-							<label for="sequence" class="controllabel">Flyby sequence:</label>
+							<label for="sequence" class="controllabel">Flyby sequence</label>
 							<input type="text" name="sequence" id="sequence"/>
 						</div>
 						<div class="controlgroup">
-							<label for="initalt" class="controllabel">Initial altitude:</label>
+							<label for="initalt" class="controllabel">Initial altitude</label>
 							<input type="text" name="initalt" id="initalt"/>
 							<label for="initalt">km ASL</label>
 						</div>
 						<div class="controlgroup">
-							<label for="finalalt" class="controllabel">Final altitude:</label>
+							<label for="finalalt" class="controllabel">Final altitude</label>
 							<input type="text" name="finalalt" id="finalalt"/>
 							<label for="finalalt">km ASL</label>
+						</div>
+						<div class="controlgroup">
+							<label for="minvinf" class="controllabel">Min. ejection v<sub>&infin;</sub></label>
+							<input type="text" name="maxvinf" id="minvinf"/>
+							<label for="minvinf">m/s</label>
+						</div>
+						<div class="controlgroup">
+							<label for="maxvinf" class="controllabel">Max. ejection v<sub>&infin;</sub></label>
+							<input type="text" name="maxvinf" id="maxvinf"/>
+							<label for="maxvinf">m/s</label>
 						</div>
 					</div>
 				</div>
@@ -68,6 +78,13 @@
 					<button id="startsearch">Search trajectories</button>
 				</div>
 			</div>
+
+			<br/>
+			<h2>How To Use</h2>
+			<hr/>
+			<h3>v<sub>&infin;</sub></h3>
+			<hr/>
+			<img src="https://arolauntech.github.io/kspmga/imgs/vinf.jpg" alt="Plot of velocity at infinity verses ejection delta-v"/>
 
 			<br/>
 			<h2>References</h2>
