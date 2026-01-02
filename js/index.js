@@ -28,8 +28,10 @@ timeslider.oninput = function() {
 function updateCanvasSize() {
 	if (document.body.clientWidth > 1000) {
 		canvas.width = 640;
-	} else {
+	} else if (document.body.clientWidth > 500) {
 		canvas.width = document.body.clientWidth * 0.64;
+	} else {
+		canvas.width = document.body.clientWidth - 180;
 	}
 	canvas.height = canvas.width / aspectratio;
 }

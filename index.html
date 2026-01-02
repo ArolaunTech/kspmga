@@ -13,36 +13,39 @@
 		<link rel="stylesheet" href="css/index.css"/>
 	</head>
 	<body>
-		<noscript>
-			<h1 class="loud">
-				You need Javascript enabled to run this!
-			</h1>
-		</noscript>
+		<div id="content">
+			<noscript>
+				<h1 class="loud">
+					You need Javascript enabled to run this!
+				</h1>
+			</noscript>
 
-		<h1>MGA Planner for KSP</h1>
-		<h6>By Arolaun</h6>
-		<br/>
+			<h1>MGA Planner for KSP</h1>
+			<h6>By Arolaun</h6>
+			<br/>
 
-		<div id="outwrapper" class="boxwrapper">
-			<div id="orbitview" class="box">
-				<h3>Orbital view</h3>
-				<hr/>
-				<canvas id="system">Solar system view</canvas>
-				<p class="centerheader">Time</p>
-				<input type="range" min="0" max="9201600" step="any" value="0" class="slider" id="timeslider"/>
-				<p id="timelabel">Year 1, Day 1 00:00:00</p>
+			<div id="outwrapper" class="boxwrapper">
+				<div id="orbitview" class="box">
+					<h3>Orbital view</h3>
+					<hr/>
+					<canvas id="system">Solar system view</canvas>
+					<p class="centerheader">Time</p>
+					<input type="range" min="0" max="9201600" step="any" value="0" class="slider" id="timeslider"/>
+					<p id="timelabel">Year 1, Day 1 00:00:00</p>
+				</div>
+				<div id="trajdetails" class="box">
+					<h3>Trajectory Details</h3>
+					<hr/>
+					<p id="trajdetailsp">
+						[Plot a trajectory to see details]<br>
+					</p>
+				</div>
 			</div>
-			<div id="trajdetails" class="box">
-				<h3>Trajectory Details</h3>
-				<hr/>
-				<p id="trajdetailsp">[Plot a trajectory to see details]</p>
-			</div>
+
+			<br/>
+			<h2>References</h2>
+			<hr/>
 		</div>
-
-		<br/>
-		<h2>References</h2>
-		<hr/>
-
 
 		<script type="module" src="js/random.js"></script>
 		<script type="module" src="js/color.js"></script>
