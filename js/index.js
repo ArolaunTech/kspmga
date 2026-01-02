@@ -4,21 +4,49 @@ import { System } from './system.js';
 import { MGAFinder } from './mga.js';
 import { secsToKerbalTimeString } from './kerbaltime.js';
 
-// Render
+// Consts
+const aspectratio = 4 / 3;
+const fov = 75;
 const SCALE = 1e-9;
 const mindist = 0.1;
 const maxdist = 1000;
 
+// Inputs
+let time = 0;
+let needsupdate = true;
+
+const timeslider = document.getElementById("timeslider");
+const timedisplay = document.getElementById("timelabel");
 const canvas = document.getElementById("system");
 
+timeslider.oninput = function() {
+	timedisplay.innerText = secsToKerbalTimeString(this.value);
+	time = this.value;
+	needsupdate = true;
+}
+
+function updateCanvasSize() {
+	if (document.body.clientWidth > 1000) {
+		canvas.width = 640;
+	} else {
+		canvas.width = document.body.clientWidth * 0.64;
+	}
+	canvas.height = canvas.width / aspectratio;
+}
+
+window.onresize = updateCanvasSize;
+
+updateCanvasSize();
+
+// Render
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, mindist, maxdist);
+const camera = new THREE.PerspectiveCamera(fov, aspectratio, mindist, maxdist);
 const controls = new OrbitControls(camera, canvas);
 controls.minDistance = 0.5;
 controls.maxDistance = 500;
 
 const renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
-renderer.setSize(canvas.width, canvas.height);
+renderer.setSize(canvas.width, canvas.height, false);
 renderer.setAnimationLoop(animate);
 
 let groups = [];
@@ -40,21 +68,9 @@ let system = new System("https://arolauntech.github.io/kspmga/data/systems/stock
 camera.position.z = 5;
 controls.update();
 
-// Inputs
-let time = 0;
-let needsupdate = true;
-
-const timeslider = document.getElementById("timeslider");
-const timedisplay = document.getElementById("timelabel");
-
-timeslider.oninput = function() {
-	timedisplay.innerText = secsToKerbalTimeString(this.value);
-	time = this.value;
-	needsupdate = true;
-}
-
 function animate() {
 	controls.update();
+	renderer.setSize(canvas.width, canvas.height, false);
 	renderer.render(scene, camera);
 
 	if (system.ready && needsupdate) {
