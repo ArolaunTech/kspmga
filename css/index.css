@@ -21,10 +21,32 @@ p, h1, h2, h3, h4, h5, h6 {
 	margin: 5px;
 }
 
+h6 {
+	color: #bbb;
+	font-weight: normal;
+	font-size: 13px;
+}
+
 hr {
 	color: var(--hr-light-col);
 	background: var(--hr-light-col);
 	border-color: var(--hr-light-col);
+	width: 100%;
+}
+
+.box {
+	width: fit-content;
+	background-color: var(--bg-light);
+	padding: 10px;
+	border: 1px solid var(--box-border);
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	margin: 5px;
+}
+
+.boxwrapper {
+	display: flex;
+	width: fit-content;
 }
 
 .centerheader {
@@ -86,15 +108,6 @@ hr {
 	background: var(--slider-dark);
 }
 
-#orbitview {
-	width: fit-content;
-	background-color: var(--bg-light);
-	padding: 10px;
-	border: 1px solid var(--box-border);
-	border-radius: 5px;
-	-moz-border-radius: 5px;
-}
-
 #system {
 	margin: auto;
 	display: block;
@@ -103,4 +116,20 @@ hr {
 #timelabel {
 	text-align: center;
 	font-size: 15px;
+}
+
+#trajdetails {
+	float: right;
+	display: flex;
+	flex-direction: column;
+	width: 300px;
+}
+
+#trajdetailsp {
+	background: #e8e8e8;
+	color: black;
+	font-family: monospace;
+	flex-grow: 1;
+	padding: 5px;
+	border-radius: 2.5px;
 }
