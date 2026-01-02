@@ -23,7 +23,7 @@ renderer.setAnimationLoop(animate);
 
 let groups = [];
 let mgafinder;
-let system = new System("../data/systems/stock.json", (sys) => {
+let system = new System("https://arolauntech.github.io/kspmga/data/systems/stock.json", (sys) => {
 	groups = sys.fillScene(scene, SCALE, canvas.width, canvas.height);
 	mgafinder = new MGAFinder(sys);
 
