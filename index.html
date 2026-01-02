@@ -21,7 +21,7 @@
 			</noscript>
 
 			<h1>MGA Planner for KSP</h1>
-			<h6>By Arolaun</h6>
+			<h6>By arolaun</h6>
 			<br/>
 
 			<div id="outwrapper" class="boxwrapper">
@@ -37,8 +37,35 @@
 					<h3>Trajectory Details</h3>
 					<hr/>
 					<p id="trajdetailsp">
-						[Plot a trajectory to see details]<br>
+						[Plot a trajectory to see details]
 					</p>
+				</div>
+			</div>
+
+			<div class="box" id="inputs">
+				<h3>Inputs</h3>
+				<hr/>
+				<div id="inputgrid">
+					<div class="inputcol">
+						<div class="controlgroup">
+							<label for="sequence" class="controllabel">Flyby sequence:</label>
+							<input type="text" name="sequence" id="sequence"/>
+						</div>
+						<div class="controlgroup">
+							<label for="initalt" class="controllabel">Initial altitude:</label>
+							<input type="text" name="initalt" id="initalt"/>
+							<label for="initalt">km ASL</label>
+						</div>
+						<div class="controlgroup">
+							<label for="finalalt" class="controllabel">Final altitude:</label>
+							<input type="text" name="finalalt" id="finalalt"/>
+							<label for="finalalt">km ASL</label>
+						</div>
+					</div>
+				</div>
+				<br/>
+				<div class="centered startsearchbox">
+					<button id="startsearch">Search trajectories</button>
 				</div>
 			</div>
 

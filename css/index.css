@@ -1,15 +1,26 @@
 :root {
 	--bg-dark: #111112;
 	--bg-light: #1f1f25;
+	--bg-lighter: #33333b;
 	--box-border: #333333;
+	--border-lighter: #444444;
 	--hr-light-col: #666667;
 	--text-col: #e8e8e8;
 	--slider-light: #1dad8e;
 	--slider-dark: #188c73;
+	--button-light: #3648bf;
+	--button-mid: #2d4c9f;
+	--button-dark: #24307f;
 }
 
 * {
 	font-family: sans-serif;
+	box-sizing: border-box;
+}
+
+*:focus {
+	outline: none;
+	box-shadow: 0 0 0 3px #80c0ff;
 }
 
 body {
@@ -19,6 +30,7 @@ body {
 p, h1, h2, h3, h4, h5, h6 {
 	color: var(--text-col);
 	margin: 5px;
+	margin-top: 2px;
 }
 
 h6 {
@@ -34,6 +46,24 @@ hr {
 	width: 100%;
 }
 
+input[type="text"] {
+	background-color: var(--bg-lighter);
+	border: 1px solid var(--border-lighter);
+	color: var(--text-col);
+	padding: 3px;
+	margin: 2px;
+	display: inline;
+	width: 150px;
+}
+
+label {
+	color: var(--text-col);
+	margin: 2px;
+	margin-right: 10px;
+	font-size: 14px;
+	display: inline;
+}
+
 .box {
 	width: fit-content;
 	background-color: var(--bg-light);
@@ -45,13 +75,31 @@ hr {
 }
 
 .boxwrapper {
-	display: inline-grid;
+	display: grid;
 	grid-template-columns: auto auto;
+}
+
+.centered {
+	display: flex;
+	justify-content: center;
 }
 
 .centerheader {
 	text-align: center;
 	margin-top: 15px;
+}
+
+.controlgroup .controllabel {
+	width: calc(50% - 90px);
+	display: inline-block;
+	text-align: right;
+}
+
+.inputlabel {
+	font-size: 14px;
+}
+
+.inputcol {
 }
 
 .loud {
@@ -108,10 +156,41 @@ hr {
 	background: var(--slider-dark);
 }
 
+.startsearchbox {
+	background-color: var(--bg-lighter);
+	width: 100%;
+	padding: 10px;
+	border-radius: 2.5px;
+}
+
 #content {
 	padding-top: 30px;
 	width: fit-content;
 	margin: auto;
+}
+
+#inputgrid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+#inputs {
+	width: calc(100% - 10px);
+}
+
+#startsearch {
+	background-image: linear-gradient(var(--button-light), var(--button-dark));
+	color: white;
+	border: none;
+	font-size: 14px;
+	padding: 7px;
+	border-radius: 5px;
+	transition: background-image .1s;
+}
+
+#startsearch:hover {
+	background-image: linear-gradient(var(--button-mid), var(--button-dark));
 }
 
 #system {
@@ -128,9 +207,9 @@ hr {
 	display: flex;
 	flex-direction: column;
 	min-width: 100px;
-	max-width: 300px;
+	max-width: 320px;
 	height: 0;
-	min-height: calc(100% - 32px);
+	min-height: calc(100% - 10px);
 }
 
 #trajdetailsp {
@@ -141,4 +220,10 @@ hr {
 	padding: 5px;
 	border-radius: 2.5px;
 	overflow-y: scroll;
+}
+
+@media (max-width: 670px) {
+	.controlgroup .controllabel {
+		display: block;
+	}
 }
