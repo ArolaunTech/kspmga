@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { System } from './system.js';
-import { MGAFinder } from './mga.js';
+import { fillScene, updateScene } from './scenefiller.js';
 import { secsToKerbalTimeString, kerbalTimeToSecs } from './kerbaltime.js';
 
 // Consts
@@ -75,12 +75,10 @@ function handleNumericMinMaxInt() {
 	}
 }
 
-initalt.onchange = handleNumericMinMax;
-finalalt.onchange = handleNumericMinMax;
-minvinf.onchange = handleNumericMinMax;
-maxvinf.onchange = handleNumericMinMax;
-maxdvdsm.onchange = handleNumericMinMax;
-maxduration.onchange = handleNumericMinMax;
+[initalt, finalalt, minvinf, maxvinf, maxdvdsm, maxduration].forEach((element) => {
+	element.onchange = handleNumericMinMax;
+});
+
 maxrevs.onchange = handleNumericMinMaxInt;
 earliestyear.onchange = handleNumericMinMaxInt;
 earliestday.onchange = handleNumericMinMaxInt;
@@ -179,23 +177,22 @@ startsearch.onclick = function() {
 		latesttime = Infinity;
 	}
 
-	let start = performance.now();
-
-	console.log(mgafinder.planMGATrajectory(
-		sequence.value.split("-"),
-		initaltnum,
-		finalaltnum,
-		minvinfnum, 
-		maxvinfnum,
-		maxdvdsmnum,
-		maxdurationnum,
-		maxrevsnum,
-		earliesttime,
-		latesttime,
-		includecapture.checked
-	));
-
-	console.log(performance.now() - start);
+	mgafinder.postMessage({
+		init: false,
+		params: [
+			sequence.value.split("-"),
+			initaltnum,
+			finalaltnum,
+			minvinfnum, 
+			maxvinfnum,
+			maxdvdsmnum,
+			maxdurationnum,
+			maxrevsnum,
+			earliesttime,
+			latesttime,
+			includecapture.checked
+		]
+	});
 }
 
 updateCanvasSize();
@@ -214,21 +211,15 @@ renderer.setAnimationLoop(animate);
 let groups = [];
 let mgafinder;
 let system = new System("https://arolauntech.github.io/kspmga/data/systems/stock.json", (sys) => {
-	groups = sys.fillScene(scene, SCALE, canvas.width, canvas.height);
-	mgafinder = new MGAFinder(sys);
+	groups = fillScene(sys, scene, SCALE, canvas.width, canvas.height);
 
 	let sequencepattern = sys.getSequenceRegex();
 	sequenceregex = new RegExp(sequencepattern);
 	sequence.pattern = sequencepattern;
 
-	// Test: Kerbin to Eve starting at 12636864 seconds with a rel. vel of 960 m/s
-	let start = performance.now();
-	const runs = 1;
+	mgafinder = new Worker(new URL("mga.js", import.meta.url), {type: "module"});
 
-	for (let i = 0; i < runs; i++) {
-		console.log(mgafinder.findTransfersNoDSM("Kerbin", "Eve", 12636864, 960, 10));
-	}
-	console.log((performance.now() - start) / runs);
+	mgafinder.postMessage({init: true, system: sys});
 });
 
 camera.position.z = 5;
@@ -240,7 +231,7 @@ function animate() {
 	renderer.render(scene, camera);
 
 	if (system.ready && needsupdate) {
-		system.updateScene(groups, SCALE, time);
+		updateScene(system, groups, SCALE, time);
 		needsupdate = false;
 	}
 }
