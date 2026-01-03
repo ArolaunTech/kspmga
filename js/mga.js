@@ -2,6 +2,8 @@ import { System } from './system.js';
 import { Vector3 } from './vector.js';
 import { realRootsQuartic } from './polynomial.js';
 import { propagate } from './orbit.js';
+import { TrajectoryTree } from './tree.js';
+import { randint } from './random.js';
 
 //Compute optimal MGA trajectories
 function infmult(M, ga) {
@@ -194,7 +196,7 @@ export class MGAFinder {
 		return 2 * Math.PI * sma * Math.sqrt(sma / mu);
 	}
 
-	findTransfersInt(r1, v1, orbit, t1, rv, mu) {
+	findTransfersInt(r1, v1, orbit, t1, rv, mu, maxrevs) {
 		const discretizationSteps = 100;
 		const epsilon = 1e-3;
 
@@ -242,8 +244,8 @@ export class MGAFinder {
 		let out = [];
 
 		for (let i = 0; i < found; i++) {
-			for (let N = 0; N < 10; N++) {
-				for (let M = 0; M < 10; M++) {
+			for (let N = 0; N < maxrevs; N++) {
+				for (let M = 0; M < maxrevs; M++) {
 					let mincompat = minfas[i] + N * period - infmult(M, maxgas[i]);
 					let maxcompat = maxfas[i] + N * period - infmult(M, mingas[i]);
 
@@ -299,6 +301,8 @@ export class MGAFinder {
 							}
 						}
 
+						if (i >= vels.length) continue;
+
 						//console.log(mid, midy);
 
 						let state2 = orbit.getState(mid);
@@ -307,8 +311,10 @@ export class MGAFinder {
 						let incoming = Vector3.sub(propagate(r1, vels[i], mid - t1, mu).v, state2.v);
 
 						out.push({
+							t1: t1,
 							t2: mid,
 							outgoing: outgoing,
+							outgoingmag: outgoing.norm,
 							incoming: incoming,
 							incomingmag: incoming.norm
 						});
@@ -321,12 +327,32 @@ export class MGAFinder {
 	}
 
 	// Find no-DSM transfers betweem two planets.
-	findTransfersNoDSM(planet1, planet2, t1, rv) {
+	findTransfersNoDSM(planet1, planet2, t1, rv, maxrevs) {
 		let state1 = this.system.getDState(planet1, t1);
 
 		let parent = this.system.bodies[this.system.bodymap.get(planet1)].parent;
 
-		return this.findTransfersInt(state1.r, state1.v, this.system.bodies[this.system.bodymap.get(planet2)].orbit, t1, rv, this.system.bodies[this.system.bodymap.get(parent)].gravparameter);
+		return this.findTransfersInt(state1.r, state1.v, this.system.bodies[this.system.bodymap.get(planet2)].orbit, t1, rv, this.system.bodies[this.system.bodymap.get(parent)].gravparameter, maxrevs);
+	}
+
+	calcEjectiondV(body, vinf, circalt) {
+		let stdgp = this.system.bodies[this.system.bodymap.get(body)].gravparameter;
+		let soi = this.system.bodies[this.system.bodymap.get(body)].soi;
+
+		let energy = 0.5 * vinf * vinf - stdgp / soi;
+		let sma = -stdgp / 2 / energy;
+
+		let ejectionvel = Math.sqrt(stdgp * (2 / circalt - 1 / sma));
+		let circvel = Math.sqrt(stdgp / circalt);
+
+		return ejectionvel - circvel;
+	}
+
+	calcCosDeflection(body, vinf) {
+		let stdgp = this.system.bodies[this.system.bodymap.get(body)].gravparameter;
+		let minalt = this.system.bodies[this.system.bodymap.get(body)].radius + this.system.bodies[this.system.bodymap.get(body)].atmodepth + 10000;
+
+		return 1 - 2 * Math.pow(1 / (1 + minalt * vinf * vinf / stdgp), 2);
 	}
 
 	planMGATrajectory(sequence, initalt, finalalt, minvinf, maxvinf, maxdvdsm, maxduration, maxrevs, earliesttime, latesttime, includecapture) {
@@ -345,8 +371,75 @@ export class MGAFinder {
 
 		console.log(fullsequence, trueinitalt, truefinalalt, minvinf, maxvinf, maxdvdsm, maxduration, maxrevs, earliesttime, truelatesttime, includecapture);
 
-		for (let i = 0; i < 1000; i++) {
-			
+		let tree = new TrajectoryTree(0, 0, {});
+
+		console.log(tree);
+
+		for (let steps = 0; steps < 100; steps++) {
+			let randomnode = tree;
+
+			while (randomnode.children.length > 0) {
+				if (Math.random < 0.2) break;
+				if (randomnode.planet === fullsequence.length - 2) break;
+
+				randomnode = randomnode.children[randint(0, randomnode.children.length)];
+			}
+
+			if (randomnode.planet === 0) {
+				let vinf = minvinf + Math.random() * (maxvinf - minvinf);
+				let start = earliesttime + Math.random() * (truelatesttime - earliesttime);
+
+				let transfers = this.findTransfersNoDSM(fullsequence[0], fullsequence[1], start, vinf, maxrevs);
+
+				for (let i = 0; i < transfers.length; i++) {
+					randomnode.children.push(new TrajectoryTree(1, this.calcEjectiondV(fullsequence[0], transfers[i].outgoingmag, trueinitalt), transfers[i]));
+				}
+			} else {
+				let vinf = randomnode.prevtransfer.incomingmag;
+				let start = randomnode.prevtransfer.t2;
+
+				let transfers = this.findTransfersNoDSM(fullsequence[0], fullsequence[1], start, vinf, maxrevs);
+
+				for (let i = 0; i < transfers.length; i++) {
+					let cosdeflection = Vector3.dot(transfers[i].outgoing, randomnode.prevtransfer.incoming) / vinf / vinf;
+					let mincosdeflection = this.calcCosDeflection(fullsequence[randomnode.planet], vinf);
+
+					if (cosdeflection < mincosdeflection) continue;
+
+					randomnode.children.push(new TrajectoryTree(randomnode.planet + 1, randomnode.dvused, transfers[i]));
+				}
+			}
 		}
+
+		console.log(tree);
+
+		let paths = tree.getAllLeafPaths();
+
+		let trajectories = [];
+
+		let mindv = Infinity;
+
+		for (let i = 0; i < paths.length; i++) {
+			if (paths[i].length === fullsequence.length) {
+				paths[i].push(
+					paths[i][fullsequence.length - 1].dvused + 
+					this.calcEjectiondV(
+						fullsequence[fullsequence.length - 1],
+						paths[i][fullsequence.length - 1].prevtransfer.incomingmag,
+						truefinalalt
+					)
+				);
+
+				if (paths[i][fullsequence.length] < mindv) {
+					console.log(paths[i]);
+
+					mindv = paths[i][fullsequence.length];
+				}
+
+				trajectories.push(paths[i]);
+			}
+		}
+
+		console.log(trajectories);
 	}
 };

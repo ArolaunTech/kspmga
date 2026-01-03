@@ -179,6 +179,8 @@ startsearch.onclick = function() {
 		latesttime = Infinity;
 	}
 
+	let start = performance.now();
+
 	console.log(mgafinder.planMGATrajectory(
 		sequence.value.split("-"),
 		initaltnum,
@@ -192,6 +194,8 @@ startsearch.onclick = function() {
 		latesttime,
 		includecapture.checked
 	));
+
+	console.log(performance.now() - start);
 }
 
 updateCanvasSize();
@@ -222,7 +226,7 @@ let system = new System("https://arolauntech.github.io/kspmga/data/systems/stock
 	const runs = 1;
 
 	for (let i = 0; i < runs; i++) {
-		console.log(mgafinder.findTransfersNoDSM("Kerbin", "Eve", 12636864, 960));
+		console.log(mgafinder.findTransfersNoDSM("Kerbin", "Eve", 12636864, 960, 10));
 	}
 	console.log((performance.now() - start) / runs);
 });
