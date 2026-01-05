@@ -45,94 +45,111 @@
 			<div class="box" id="inputs">
 				<h3>Inputs</h3>
 				<hr/>
-				<div id="inputgrid">
-					<div class="inputcol">
-						<div class="controlgroup">
-							<label for="sequence" class="controllabel">Flyby sequence</label>
-							<input type="text" name="sequence" id="sequence" pattern="^([a-zA-z]+-)+[a-zA-z]+$" value="K-E-D" required/>
+				<div class="startsearchbox" id="initsettings">
+					<p>Departure</p>
+					<div class="inputgrid">
+						<div class="inputcol">
+							<div class="controlgroup">
+								<label for="startingbody" class="controllabel">Starting body</label>
+								<select name="startingbody" id="startingbody">
+								</select>
+							</div>
+							<div class="controlgroup">
+								<label for="initalt" class="controllabel">Initial altitude</label>
+								<input type="number" name="initalt" id="initalt" min="0" step="any" value="100" required/>
+								<label for="initalt">km ASL</label>
+							</div>
+							<div class="controlgroup">
+								<label for="minvinf" class="controllabel">Min. ejection v<sub>&infin;</sub></label>
+								<input type="number" name="minvinf" id="minvinf" min="0" step="any" value="800" required/>
+								<label for="minvinf">m/s</label>
+							</div>
+							<div class="controlgroup">
+								<label for="maxvinf" class="controllabel">Max. ejection v<sub>&infin;</sub></label>
+								<input type="number" name="maxvinf" id="maxvinf" min="0" step="any" value="2000" required/>
+								<label for="maxvinf">m/s</label>
+							</div>
 						</div>
-						<div class="controlgroup">
-							<label for="initalt" class="controllabel">Initial altitude</label>
-							<input type="number" name="initalt" id="initalt" min="0" step="any" value="100" required/>
-							<label for="initalt">km ASL</label>
-						</div>
-						<div class="controlgroup">
-							<label for="finalalt" class="controllabel">Final altitude</label>
-							<input type="number" name="finalalt" id="finalalt" min="0" step="any" value="100" required/>
-							<label for="finalalt">km ASL</label>
-						</div>
-						<div class="controlgroup">
-							<label for="minvinf" class="controllabel">Min. ejection v<sub>&infin;</sub></label>
-							<input type="number" name="minvinf" id="minvinf" min="0" step="any" value="500" required/>
-							<label for="minvinf">m/s</label>
-						</div>
-						<div class="controlgroup">
-							<label for="maxvinf" class="controllabel">Max. ejection v<sub>&infin;</sub></label>
-							<input type="number" name="maxvinf" id="maxvinf" min="0" step="any" value="4000" required/>
-							<label for="maxvinf">m/s</label>
-						</div>
-						<div class="controlgroup">
-							<label for="maxdvdsm" class="controllabel">Max. Δv per DSM</label>
-							<input type="number" name="maxdvdsm" id="maxdvdsm" min="0" step="any" value="100" required/>
-							<label for="maxdvdsm">m/s</label>
+						<div class="inputcol">
+							<div class="controlgroup">
+								<label class="controllabel">Earliest departure</label>
+								<div class="timegroup">
+									<div class="timeinputcontainer">
+										<label class="timetypelabel">Year</label>
+										<input type="number" min="1" value="1" step="any" id="earliestyear" class="timeinput" required/>
+									</div>
+								</div>
+								<div class="timegroup">
+									<div class="timeinputcontainer">
+										<label class="timetypelabel">Day</label>
+										<input type="number" min="1" max="426" value="1" step="any" id="earliestday" class="timeinput" required/>
+									</div>
+								</div>
+								<div class="timegroup">
+									<div class="timeinputcontainer">
+										<label class="timetypelabel">Hour</label>
+										<input type="number" min="0" max="5" value="0" step="any" id="earliesthour" class="timeinput" required/>
+									</div>
+								</div>
+							</div>
+							<div class="controlgroup">
+								<label class="controllabel">Latest departure</label>
+								<div class="timegroup">
+									<div class="timeinputcontainer">
+										<label class="timetypelabel">Year</label>
+										<input type="number" min="1" value="3" step="any" id="latestyear" class="timeinput"/>
+									</div>
+								</div>
+								<div class="timegroup">
+									<div class="timeinputcontainer">
+										<label class="timetypelabel">Day</label>
+										<input type="number" min="1" max="426" value="1" step="any" id="latestday" class="timeinput"/>
+									</div>
+								</div>
+								<div class="timegroup">
+									<div class="timeinputcontainer">
+										<label class="timetypelabel">Hour</label>
+										<input type="number" min="0" max="5" value="0" step="any" id="latesthour" class="timeinput"/>
+									</div>
+								</div>
+							</div>
+							<div class="controlgroup">
+								<label for="maxdvdsm" class="controllabel">Max. Δv per DSM</label>
+								<input type="number" name="maxdvdsm" id="maxdvdsm" min="0" step="any" value="100" required/>
+								<label for="maxdvdsm">m/s</label>
+							</div>
 						</div>
 					</div>
-					<div class="inputcol">
-						<div class="controlgroup">
-							<label for="maxduration" class="controllabel">Max. duration</label>
-							<input type="number" name="maxduration" id="maxduration" min="0" step="any"/>
-							<label for="maxduration">days</label>
-						</div>
-						<div class="controlgroup">
-							<label for="maxrevs" class="controllabel">Max. revolutions</label>
-							<input type="number" name="maxrevs" id="maxrevs" min="0" max="20" value="10" step="any" required/>
-						</div>
-						<div class="controlgroup">
-							<label class="controllabel">Earliest departure</label>
-							<div class="timegroup">
-								<div class="timeinputcontainer">
-									<label class="timetypelabel">Year</label>
-									<input type="number" min="1" value="1" step="any" id="earliestyear" class="timeinput" required/>
-								</div>
-							</div>
-							<div class="timegroup">
-								<div class="timeinputcontainer">
-									<label class="timetypelabel">Day</label>
-									<input type="number" min="1" max="426" value="1" step="any" id="earliestday" class="timeinput" required/>
-								</div>
-							</div>
-							<div class="timegroup">
-								<div class="timeinputcontainer">
-									<label class="timetypelabel">Hour</label>
-									<input type="number" min="0" max="5" value="0" step="any" id="earliesthour" class="timeinput" required/>
-								</div>
-							</div>
-						</div>
-						<div class="controlgroup">
-							<label class="controllabel">Latest departure</label>
-							<div class="timegroup">
-								<div class="timeinputcontainer">
-									<label class="timetypelabel">Year</label>
-									<input type="number" min="1" value="1" step="any" id="latestyear" class="timeinput"/>
-								</div>
-							</div>
-							<div class="timegroup">
-								<div class="timeinputcontainer">
-									<label class="timetypelabel">Day</label>
-									<input type="number" min="1" max="426" value="1" step="any" id="latestday" class="timeinput"/>
-								</div>
-							</div>
-							<div class="timegroup">
-								<div class="timeinputcontainer">
-									<label class="timetypelabel">Hour</label>
-									<input type="number" min="0" max="5" value="0" step="any" id="latesthour" class="timeinput"/>
-								</div>
-							</div>
-						</div>
-						<div class="controlgroup">
-							<label for="includecapture" class="controllabel">Include insertion in Δv calculation?</label>
-							<input type="checkbox" name="includecapture" id="includecapture"/>
-						</div>
+				</div>
+				<br/>
+				<p>Transfer</p>
+				<div class="controlgroup">
+					<label for="maxrevs" class="controllabel">Max. revolutions</label>
+					<input type="number" name="maxrevs" id="maxrevs" min="0" step="1" value="1" max="20" required/>
+				</div>
+				<button id="addbody"><img src="https://arolauntech.github.io/kspmga/imgs/plus.png"/></button>
+				<button id="subbody"><img src="https://arolauntech.github.io/kspmga/imgs/minus.png"/></button>
+				<br/>
+				<div class="startsearchbox" id="finalsettings">
+					<p>Arrival</p>
+					<div class="controlgroup">
+						<label for="endingbody" class="controllabel">Final body</label>
+						<select name="endingbody" id="endingbody">
+						</select>
+					</div>
+					<div class="controlgroup">
+						<label for="finalalt" class="controllabel">Final altitude</label>
+						<input type="number" name="finalalt" id="finalalt" min="0" step="any" value="100" required/>
+						<label for="finalalt">km ASL</label>
+					</div>
+					<div class="controlgroup">
+						<label for="maxduration" class="controllabel">Max. duration</label>
+						<input type="number" name="maxduration" id="maxduration" min="0" step="any"/>
+						<label for="maxduration">days</label>
+					</div>
+					<div class="controlgroup">
+						<label for="includecapture" class="controllabel">Include insertion in Δv?</label>
+						<input type="checkbox" name="includecapture" id="includecapture"/>
 					</div>
 				</div>
 				<p id="errormsg"></p>
@@ -183,6 +200,7 @@
 		<script type="module" src="js/tree.js"></script>
 		<script type="module" src="js/system.js"></script>
 		<script type="module" src="js/scenefiller.js"></script>
+		<script type="module" src="js/mga.js"></script>
 		<script type="module" src="js/index.js"></script>
 	</body>
 </html>

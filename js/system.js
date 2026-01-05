@@ -40,8 +40,6 @@ export class System {
 					this.bodies[i].orbit = neworbit;
 				}
 
-				this.generateAbbreviations();
-
 				f(this);
 
 				this.ready = true;
@@ -56,48 +54,6 @@ export class System {
 			}
 		}
 		return 0;
-	}
-
-	generateAbbreviations() {
-		let massindices = [];
-		for (let i = 0; i < this.bodies.length; i++) {
-			massindices.push(i);
-		}
-
-		let bodies = this.bodies;
-		massindices.sort(function (a, b) {
-			return bodies[b].gravparameter - bodies[a].gravparameter;
-		});
-
-		let maxlength = 0;
-		for (let i = 0; i < this.bodies.length; i++) {
-			if (this.bodies[i].name.length > maxlength) {
-				maxlength = this.bodies[i].name.length;
-			}
-		}
-
-		for (let i = 0; i < this.bodies.length; i++) {
-			this.abbreviations.set(this.bodies[i].name, this.bodies[i].name);
-		}
-		for (let length = 1; length <= maxlength; length++) {
-			for (let i = 0; i < massindices.length; i++) {
-				if (length >= this.bodies[massindices[i]].name.length) continue;
-
-				let abbreviation = this.bodies[massindices[i]].name.slice(0, length);
-
-				if (this.abbreviations.has(abbreviation)) continue;
-
-				this.abbreviations.set(abbreviation, this.bodies[massindices[i]].name);
-			}
-		}
-	}
-
-	getSequenceRegex() {
-		return "^((" + 
-			Array.from(this.abbreviations.keys()).join("|") +
-			")-)+(" +
-			Array.from(this.abbreviations.keys()).join("|") +
-			")$";
 	}
 
 	getDState(name, time) {

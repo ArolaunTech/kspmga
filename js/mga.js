@@ -245,7 +245,7 @@ class MGAFinder {
 
 		for (let i = 0; i < found; i++) {
 			for (let N = 0; N <= maxrevs; N++) {
-				for (let M = 0; M <= maxrevs; M++) {
+				for (let M = 0; M <= 100; M++) {
 					let mincompat = minfas[i] + N * period - infmult(M, maxgas[i]);
 					let maxcompat = maxfas[i] + N * period - infmult(M, mingas[i]);
 
@@ -364,13 +364,30 @@ class MGAFinder {
 		return 1 - 2 * Math.pow(1 / (1 + minalt * vinf * vinf / stdgp), 2);
 	}
 
+	violation(body, vin, vout) {
+		let innorm = vin.norm;
+		let outnorm = vout.norm;
+
+		let cosmaxdeflection = this.calcCosDeflection(body, innorm);
+		let cosdeflection = Vector3.dot(vin, vout) / innorm / outnorm;
+
+		if (cosdeflection > cosmaxdeflection) {
+			return Math.abs(outnorm - innorm);
+		}
+
+		let sindir = Vector3.normalize(Vector3.cross(Vector3.cross(vin, vout), vin));
+		let closest = Vector3.add(Vector3.mult(vin, cosmaxdeflection), Vector3.mult(sindir, innorm * Math.sqrt(1 - cosmaxdeflection * cosmaxdeflection)));
+
+		return Vector3.sub(closest, vout).norm;
+	}
+
 	mutate(dir, jiggle) {
 		let out = Vector3.add(dir, new Vector3(jiggle * normal(), jiggle * normal(), jiggle * normal()));
 
 		return Vector3.normalize(out);
 	}
 
-	planMGATrajectory(sequence, initalt, finalalt, minvinf, maxvinf, maxdvdsm, maxduration, maxrevs, earliesttime, latesttime, includecapture) {
+	planMGATrajectory(sequence, initalt, finalalt, minvinf, maxvinf, maxdvdsm, maxduration, maxrevs, earliesttime, latesttime, includecapture, includeflyby) {
 		let fullsequence = [];
 		for (let i = 0; i < sequence.length; i++) {
 			fullsequence.push(this.system.abbreviations.get(sequence[i]));
@@ -463,11 +480,11 @@ class MGAFinder {
 					let currperiod = this.system.bodies[this.system.bodymap.get(fullsequence[0])].orbit.period;
 	
 					for (let a = 1; a <= maxrevs; a++) {
-						for (let b = 1; b <= maxrevs; b++) {
+						for (let b = 1; b <= 100; b++) {
 							let period = currperiod * a / b;
 	
 							if (period > maxperiod) continue;
-							if (period < minperiod) continue;
+							if (period < minperiod) break;
 	
 							let sma = Math.cbrt(mu * Math.pow(period / 2 / Math.PI, 2));
 							let targetvel = Math.sqrt(mu * (2 / dist1 - 1 / sma));
@@ -508,20 +525,19 @@ class MGAFinder {
 				}
 			} else {
 				let vinf = randomnode.prevtransfer.incomingmag;
-				let start = randomnode.prevtransfer.t2;
+				if (includeflyby) vinf += normal() * maxdvdsm;
 
-				let mincosdeflection = this.calcCosDeflection(fullsequence[randomnode.planet], vinf);
+				let previncoming = randomnode.prevtransfer.incoming;
+				let start = randomnode.prevtransfer.t2;
 
 				let transfers = this.findTransfersNoDSM(fullsequence[randomnode.planet], fullsequence[randomnode.planet + 1], start, vinf, maxrevs);
 
 				for (let i = 0; i < transfers.length; i++) {
 					//if (Math.random() < 0.9) continue;
-
-					let cosdeflection = Vector3.dot(transfers[i].outgoing, randomnode.prevtransfer.incoming) / vinf / vinf;
-
-					if (cosdeflection < mincosdeflection) continue;
-
-					randomnode.children.push(new TrajectoryTree(randomnode.planet + 1, randomnode.dvused, transfers[i]));
+					let nonjiggledviolation = this.violation(fullsequence[randomnode.planet], previncoming, transfers[i].outgoing);
+					if ((nonjiggledviolation < 1) || includeflyby) {
+						randomnode.children.push(new TrajectoryTree(randomnode.planet + 1, randomnode.dvused + nonjiggledviolation, transfers[i]));
+					}
 
 					if (randomnode.planet === fullsequence.length - 2) numnodes++;
 					totalnodes++;
@@ -531,15 +547,15 @@ class MGAFinder {
 						let jiggled = Vector3.mult(this.mutate(nodsmoutdir, jiggle), vinf);
 						let dvdsm = Math.random() * maxdvdsm;
 
-						let cosdeflection = Vector3.dot(jiggled, randomnode.prevtransfer.incoming) / vinf / vinf;
-						if (cosdeflection < mincosdeflection) continue;
-
 						let propagatetime = Math.random() * (transfers[i].t2 - transfers[i].t1);
 
 						let state1 = this.system.getDState(fullsequence[randomnode.planet], start);
 						let stateDSM = propagate(state1.r, Vector3.add(state1.v, jiggled), propagatetime, mu);
 
 						let dsmtransfers = this.findTransfersInt(stateDSM.r, stateDSM.v, this.system.bodies[this.system.bodymap.get(fullsequence[randomnode.planet + 1])].orbit, start + propagatetime, dvdsm, mu, maxrevs);
+
+						let jiggledviolation = this.violation(fullsequence[randomnode.planet], previncoming, jiggled);
+						if ((jiggledviolation > 1) && !includeflyby) continue;
 
 						for (let j = 0; j < dsmtransfers.length; j++) {
 							let dsmtransfer = {
@@ -555,7 +571,7 @@ class MGAFinder {
 								incomingmag: dsmtransfers[j].incomingmag 
 							};
 
-							randomnode.children.push(new TrajectoryTree(randomnode.planet + 1, randomnode.dvused + dvdsm, dsmtransfer));
+							randomnode.children.push(new TrajectoryTree(randomnode.planet + 1, randomnode.dvused + dvdsm + jiggledviolation, dsmtransfer));
 							
 							if (randomnode.planet === fullsequence.length - 2) numnodes++;
 							totalnodes++;
@@ -586,11 +602,11 @@ class MGAFinder {
 					let currperiod = this.system.bodies[this.system.bodymap.get(fullsequence[randomnode.planet])].orbit.period;
 	
 					for (let a = 1; a <= maxrevs; a++) {
-						for (let b = 1; b <= maxrevs; b++) {
+						for (let b = 1; b <= 100; b++) {
 							let period = currperiod * a / b;
 	
 							if (period > maxperiod) continue;
-							if (period < minperiod) continue;
+							if (period < minperiod) break;
 	
 							let sma = Math.cbrt(mu * Math.pow(period / 2 / Math.PI, 2));
 							let targetvel = Math.sqrt(mu * (2 / dist1 - 1 / sma));
@@ -614,9 +630,9 @@ class MGAFinder {
 	
 							let jiggled = Vector3.mult(this.mutate(nodsmoutdir, jiggle), vinf);
 							let dvdsm = Math.random() * maxdvdsm;
-	
-							let cosdeflection = Vector3.dot(jiggled, randomnode.prevtransfer.incoming) / vinf / vinf;
-							if (cosdeflection < mincosdeflection) continue;
+
+							let jiggledviolation = this.violation(fullsequence[randomnode.planet], previncoming, jiggled);
+							if ((jiggledviolation > 1) && !includeflyby) continue;
 	
 							let propagatetime = Math.random() * currperiod * a;
 	
@@ -638,7 +654,7 @@ class MGAFinder {
 									incomingmag: dsmtransfers[j].incomingmag 
 								};
 	
-								randomnode.children.push(new TrajectoryTree(randomnode.planet + 1, randomnode.dvused + dvdsm, dsmtransfer));
+								randomnode.children.push(new TrajectoryTree(randomnode.planet + 1, randomnode.dvused + dvdsm + jiggledviolation, dsmtransfer));
 								
 								if (randomnode.planet === fullsequence.length - 2) numnodes++;
 								totalnodes++;
@@ -695,6 +711,8 @@ onmessage = (e) => {
 		mgafinder = new MGAFinder(Object.setPrototypeOf(copiedsystem, System.prototype));
 	} else {
 		let params = e.data.params;
+
+		console.log(params);
 
 		console.log(mgafinder.planMGATrajectory(...params));
 	}

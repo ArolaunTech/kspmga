@@ -11,9 +11,6 @@ const SCALE = 1e-9;
 const mindist = 0.1;
 const maxdist = 1000;
 
-// Tests
-let sequenceregex = /^([a-zA-z]+-)+[a-zA-z]+$/;
-
 // Inputs
 let time = 0;
 let needsupdate = true;
@@ -23,14 +20,14 @@ const timedisplay = document.getElementById("timelabel");
 
 const canvas = document.getElementById("system");
 
-const sequence = document.getElementById("sequence");
+const initbody = document.getElementById("startingbody");
+const finalbody = document.getElementById("endingbody");
 const initalt = document.getElementById("initalt");
 const finalalt = document.getElementById("finalalt");
 const minvinf = document.getElementById("minvinf");
 const maxvinf = document.getElementById("maxvinf");
 const maxdvdsm = document.getElementById("maxdvdsm");
 const maxduration = document.getElementById("maxduration");
-const maxrevs = document.getElementById("maxrevs");
 const earliestyear = document.getElementById("earliestyear");
 const earliestday = document.getElementById("earliestday");
 const earliesthour = document.getElementById("earliesthour");
@@ -75,17 +72,27 @@ function handleNumericMinMaxInt() {
 	}
 }
 
+function setBodySelectOptions(element, sys) {
+	element.textContent = "";
+
+	for (let i = 0; i < sys.bodies.length; i++) {
+		if (sys.bodies[i].root) continue; // Cannot currently do flyby sequences with arbitrary solar orbits
+
+		const option = document.createElement("option");
+
+		option.innerText = sys.bodies[i].name;
+
+		element.appendChild(option);
+	}
+}
+
 [initalt, finalalt, minvinf, maxvinf, maxdvdsm, maxduration].forEach((element) => {
 	element.onchange = handleNumericMinMax;
 });
 
-maxrevs.onchange = handleNumericMinMaxInt;
-earliestyear.onchange = handleNumericMinMaxInt;
-earliestday.onchange = handleNumericMinMaxInt;
-earliesthour.onchange = handleNumericMinMaxInt;
-latestyear.onchange = handleNumericMinMaxInt;
-latestday.onchange = handleNumericMinMaxInt;
-latesthour.onchange = handleNumericMinMaxInt;
+[earliestyear, earliesthour, earliestday, latestyear, latesthour, latestday].forEach((element) => {
+	element.onchange = handleNumericMinMaxInt;
+});
 
 timeslider.oninput = function() {
 	timedisplay.innerText = secsToKerbalTimeString(this.value);
@@ -158,13 +165,6 @@ startsearch.onclick = function() {
 		maxdurationnum = Infinity;
 	}
 
-	if (maxrevs.value.length === 0) {
-		errormsg.innerText = "Error: must provide a maximum revolutions value!";
-		return;
-	}
-
-	let maxrevsnum = Number(maxrevs.value);
-
 	if ((earliestyear.value.length === 0) || (earliestday.value.length === 0) || (earliesthour.value.length === 0)) {
 		errormsg.innerText = "Error: must provide an initial date!";
 		return;
@@ -176,6 +176,8 @@ startsearch.onclick = function() {
 	if ((latestyear.value.length === 0) || (latestday.value.length === 0) || (latesthour.value.length === 0)) {
 		latesttime = Infinity;
 	}
+
+	console.log("h", mgafinder);
 
 	mgafinder.postMessage({
 		init: false,
@@ -190,7 +192,8 @@ startsearch.onclick = function() {
 			maxrevsnum,
 			earliesttime,
 			latesttime,
-			includecapture.checked
+			includecapture.checked,
+			includeflyby.checked
 		]
 	});
 }
@@ -213,9 +216,8 @@ let mgafinder;
 let system = new System("https://arolauntech.github.io/kspmga/data/systems/stock.json", (sys) => {
 	groups = fillScene(sys, scene, SCALE, canvas.width, canvas.height);
 
-	let sequencepattern = sys.getSequenceRegex();
-	sequenceregex = new RegExp(sequencepattern);
-	sequence.pattern = sequencepattern;
+	setBodySelectOptions(initbody, sys);
+	setBodySelectOptions(finalbody, sys);
 
 	mgafinder = new Worker(new URL("mga.js", import.meta.url), {type: "module"});
 

@@ -2,6 +2,7 @@
 	--bg-dark: #111112;
 	--bg-light: #1f1f25;
 	--bg-lighter: #33333b;
+	--bg-lightest: #484853;
 	--box-border: #333333;
 	--border-lighter: #444444;
 	--hr-light-col: #666667;
@@ -53,8 +54,8 @@ hr {
 	width: 100%;
 }
 
-input[type="text"], input[type="number"] {
-	background-color: var(--bg-lighter);
+input[type="text"], input[type="number"], select {
+	background-color: var(--bg-light);
 	border: 1px solid var(--border-lighter);
 	color: var(--text-col);
 	padding: 3px;
@@ -123,6 +124,13 @@ li {
 }
 
 .inputcol {
+}
+
+.lighterssbox {
+	background: var(--bg-lightest);
+	width: 100%;
+	padding: 10px;
+	border-radius: 2.5px;
 }
 
 .loud {
@@ -215,10 +223,9 @@ input[type="number"].timeinput {
 	color: var(--error-red);
 	text-align: center;
 	font-weight: bold;
-	height: 15px;
 }
 
-#inputgrid {
+.inputgrid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 10px;
