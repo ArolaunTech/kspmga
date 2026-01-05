@@ -36,6 +36,16 @@ const latestday = document.getElementById("latestday");
 const latesthour = document.getElementById("latesthour");
 const includeinsertion = document.getElementById("includecapture");
 
+const addbody = document.getElementById("addbody");
+const subbody = document.getElementById("subbody");
+
+let numbodies = 2;
+
+let intermediatebodies = [];
+let flybydvs = [];
+let maxrevs = [document.getElementById("maxrevs")];
+let inputstack = [];
+
 const startsearch = document.getElementById("startsearch");
 
 const errormsg = document.getElementById("errormsg");
@@ -114,12 +124,15 @@ window.onresize = updateCanvasSize;
 startsearch.onclick = function() {
 	errormsg.innerText = "";
 
-	let valid = sequenceregex.test(sequence.value);
+	let sequence = [initbody.value];
 
-	if (!valid) {
-		errormsg.innerText = "Error: invalid sequence provided!";
-		return;
+	for (let i = 0; i < intermediatebodies.length; i++) {
+		sequence.push(intermediatebodies[i].value);
 	}
+
+	sequence.push(finalbody.value);
+
+	console.log(sequence);
 
 	if (initalt.value.length === 0) {
 		errormsg.innerText = "Error: must provide an initial altitude!";
@@ -159,7 +172,7 @@ startsearch.onclick = function() {
 
 	let maxdvdsmnum = Number(maxdvdsm.value);
 
-	let maxdurationnum = Number(maxduration.value);
+	let maxdurationnum = Number(maxduration.value) * 21600;
 
 	if (maxduration.value.length === 0) {
 		maxdurationnum = Infinity;
@@ -177,25 +190,157 @@ startsearch.onclick = function() {
 		latesttime = Infinity;
 	}
 
+	let flybydvnums = [];
+	for (let i = 0; i < flybydvs.length; i++) {
+		if (flybydvs[i].value.length === 0) {
+			errormsg.innerText = "Error: must provide a maximum flyby Δv!";
+			return;
+		}
+
+		flybydvnums.push(Number(flybydvs[i].value));
+	}
+
+	let maxrevnums = [];
+	for (let i = 0; i < maxrevs.length; i++) {
+		if (maxrevs[i].value.length === 0) {
+			errormsg.innerText = "Error: must provide a maximum number of revolutions for all transfers!";
+			return;
+		}
+
+		maxrevnums.push(Number(maxrevs[i].value));
+	}
+
 	console.log("h", mgafinder);
 
 	mgafinder.postMessage({
 		init: false,
 		params: [
-			sequence.value.split("-"),
+			sequence,
 			initaltnum,
 			finalaltnum,
 			minvinfnum, 
 			maxvinfnum,
 			maxdvdsmnum,
 			maxdurationnum,
-			maxrevsnum,
+			maxrevnums,
 			earliesttime,
 			latesttime,
-			includecapture.checked,
-			includeflyby.checked
+			includeinsertion.checked,
+			flybydvnums
 		]
 	});
+}
+
+addbody.onclick = function() {
+	console.log("add body");
+
+	const flybysettings = document.createElement("div");
+	const descriptor = document.createElement("p");
+
+	flybysettings.classList.add("startsearchbox");
+
+	descriptor.innerText = "Flyby";
+
+	const bodygroup = document.createElement("div");
+	const bodylabel = document.createElement("label");
+	const bodyinput = document.createElement("select");
+
+	bodygroup.classList.add("controlgroup");
+
+	bodylabel.classList.add("controllabel");
+	bodylabel.innerText = "Flyby body";
+
+	bodygroup.appendChild(bodylabel);
+
+	setBodySelectOptions(bodyinput, system);
+
+	bodygroup.appendChild(bodyinput);
+
+	const flybydvgroup = document.createElement("div");
+	const flybydvlabel = document.createElement("label");
+	const flybydvinput = document.createElement("input");
+	const flybydvunits = document.createElement("label");
+
+	flybydvgroup.classList.add("controlgroup");
+
+	flybydvlabel.classList.add("controllabel");
+	flybydvlabel.innerText = "Max flyby Δv";
+
+	flybydvinput.type = "number";
+	flybydvinput.min = "0";
+	flybydvinput.step = "any";
+	flybydvinput.required = true;
+	flybydvinput.value = "100";
+	flybydvinput.onchange = handleNumericMinMax;
+
+	flybydvunits.innerText = "m/s";
+
+	const transferdescriptor = document.createElement("p");
+
+	transferdescriptor.innerText = "Transfer";
+
+	const transfersettings = document.createElement("div");
+	const maxrevslabel = document.createElement("label");
+	const maxrevsinput = document.createElement("input");
+
+	transfersettings.classList.add("controlgroup");
+
+	maxrevslabel.classList.add("controllabel");
+	maxrevslabel.innerText = "Max. revolutions";
+
+	maxrevsinput.type = "number";
+	maxrevsinput.min = "0";
+	maxrevsinput.step = "1";
+	maxrevsinput.max = "20";
+	maxrevsinput.required = true;
+	maxrevsinput.value = "1";
+	maxrevsinput.onchange = handleNumericMinMaxInt;
+
+	flybydvgroup.appendChild(flybydvlabel);
+	flybydvgroup.appendChild(flybydvinput);
+	flybydvgroup.appendChild(flybydvunits);
+
+	transfersettings.appendChild(maxrevslabel);
+	transfersettings.appendChild(maxrevsinput);
+
+	flybysettings.appendChild(descriptor);
+	flybysettings.appendChild(bodygroup);
+	flybysettings.appendChild(flybydvgroup);
+
+	const break1 = document.createElement("br");
+	const break2 = document.createElement("br");
+
+	inputstack.push([break1, flybysettings, break2, transferdescriptor, transfersettings]);
+
+	document.getElementById("inputs").insertBefore(break1, document.getElementById("endsettings"));
+	document.getElementById("inputs").insertBefore(flybysettings, document.getElementById("endsettings"));
+	document.getElementById("inputs").insertBefore(break2, document.getElementById("endsettings"));
+	document.getElementById("inputs").insertBefore(transferdescriptor, document.getElementById("endsettings"));
+	document.getElementById("inputs").insertBefore(transfersettings, document.getElementById("endsettings"));
+
+	numbodies++;
+
+	intermediatebodies.push(bodyinput);
+	flybydvs.push(flybydvinput);
+	maxrevs.push(maxrevsinput);
+}
+
+subbody.onclick = function() {
+	if (numbodies <= 2) return;
+
+	console.log("sub body");
+
+	let removeelems = inputstack.pop();
+
+	for (let i = 0; i < removeelems.length; i++) {
+		removeelems[i].remove();
+	}
+
+	maxrevs.pop();
+	flybydvs.pop();
+	intermediatebodies.pop();
+
+	numbodies--;
 }
 
 updateCanvasSize();

@@ -1,6 +1,7 @@
 :root {
 	--bg-dark: #111112;
 	--bg-light: #1f1f25;
+	--bg-lightish: #282828;
 	--bg-lighter: #33333b;
 	--bg-lightest: #484853;
 	--box-border: #333333;
@@ -80,6 +81,25 @@ label {
 li {
 	color: var(--text-col);
 	font-size: 14px;
+}
+
+svg {
+	margin: 0;
+}
+
+.bodybutton {
+	width: 35px;
+	height: 35px;
+	padding: 0;
+	background-color: var(--bg-lighter);
+	border-radius: 50%;
+	border: 2px solid var(--border-lighter);
+	color: white;
+	margin: 7.5px;
+}
+
+.bodybutton:hover {
+	background-color: var(--bg-lightish);
 }
 
 .box {
