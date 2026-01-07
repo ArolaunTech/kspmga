@@ -4,6 +4,7 @@ import { realRootsQuartic } from './polynomial.js';
 import { Orbit, propagate } from './orbit.js';
 import { TrajectoryTree } from './tree.js';
 import { randint, normal } from './random.js';
+import { lambert } from './lambert.js';
 
 //Compute optimal MGA trajectories
 function infmult(M, ga) {
@@ -387,6 +388,69 @@ class MGAFinder {
 		return Vector3.normalize(out);
 	}
 
+	fitness(trajectory, sequence, initalt, finalalt, includecapture) {
+		let parent = this.system.bodies[this.system.bodymap.get(sequence[0])].parent;
+		let mu = this.system.bodies[this.system.bodymap.get(parent)].gravparameter;
+
+		let outgoing = new Vector3(trajectory[1], trajectory[2], trajectory[3]);
+
+		let dv = this.calcEjectiondV(sequence[0], outgoing.norm, initalt);
+
+		// Iterate over each leg
+		for (let i = 0; i < sequence.length - 1; i++) {
+			let state1 = this.system.getDState(sequence[i], trajectory[5 * i]);
+			let state2 = this.system.getDState(sequence[i + 1], trajectory[5 * i + 5]);
+			let totaltime = trajectory[5 * i + 5] - trajectory[5 * i];
+
+			let vout = Vector3.add(
+				state1.v, 
+				new Vector3(
+					trajectory[5 * i + 1],
+					trajectory[5 * i + 2],
+					trajectory[5 * i + 3]
+				));
+
+			let statedsm = propagate(state1.r, vout, trajectory[5 * i + 4] * totaltime, mu);
+
+			let sols = lambert(statedsm.r, state2.r, (1 - trajectory[5 * i + 4]) * totaltime, mu, 5, false);
+
+			let mindsmdv = Infinity;
+			let bestvin;
+
+			for (let j = 0; j < sols.length; j++) {
+				let vafter = sols[j][0];
+				let dsmdv = Vector3.sub(vafter, statedsm.v).norm;
+
+				if (dsmdv < mindsmdv) {
+					mindsmdv = dsmdv;
+					bestvin = sols[j][1];
+				}
+			}
+
+			dv += mindsmdv;
+
+			let bestincoming = Vector3.sub(bestvin, state2.v);
+
+			if (i === sequence.length - 2) {
+				// Capture
+				if (includecapture) {
+					dv += this.calcEjectiondV(sequence[i + 1], bestincoming.norm, finalalt);
+				}
+			} else {
+				// Flyby
+				let postflybyoutgoing = new Vector3(
+					trajectory[5 * i + 6],
+					trajectory[5 * i + 7],
+					trajectory[5 * i + 8]
+				);
+
+				dv += this.violation(sequence[i + 1], bestincoming, postflybyoutgoing);
+			}
+		}
+
+		return dv;
+	}
+
 	planMGATrajectory(sequence, initalt, finalalt, minvinf, maxvinf, maxdvdsm, maxduration, maxrevs, earliesttime, latesttime, includecapture, flybydvs) {
 		let trueinitalt = this.system.bodies[this.system.bodymap.get(sequence[0])].radius + initalt;
 		let truefinalalt = this.system.bodies[this.system.bodymap.get(sequence[sequence.length - 1])].radius + finalalt;
@@ -396,20 +460,17 @@ class MGAFinder {
 			truelatesttime = earliesttime + 1e9; // About 10 years
 		}
 
-		console.log(sequence, trueinitalt, truefinalalt, minvinf, maxvinf, maxdvdsm, maxduration, maxrevs, earliesttime, truelatesttime, includecapture);
-
 		let tree = new TrajectoryTree(0, 0, {});
 		let jiggle = maxdvdsm / 5000;
 
 		let parent = this.system.bodies[this.system.bodymap.get(sequence[0])].parent;
 		let mu = this.system.bodies[this.system.bodymap.get(parent)].gravparameter;
 
-		console.log(tree);
-
+		// Global search
 		let numnodes = 0;
 		let totalnodes = 0;
 		for (let steps = 0; steps < 50000; steps++) {
-			if (steps % 100 === 0) {
+			if (steps % 1000 === 0) {
 				console.log(steps, numnodes, totalnodes);
 			}
 			
@@ -435,7 +496,7 @@ class MGAFinder {
 			let resonant = sequence[randomnode.planet] === sequence[randomnode.planet + 1];
 
 			if (randomnode.planet === 0) {
-				steps--;
+				if (Math.random() < 0.99) steps--;
 
 				let vinf = minvinf + Math.random() * (maxvinf - minvinf);
 				let start = earliesttime + Math.random() * (truelatesttime - earliesttime);
@@ -665,8 +726,7 @@ class MGAFinder {
 			}
 		}
 
-		console.log(tree);
-
+		// Get all found trajectories
 		let paths = tree.getAllLeafPaths();
 
 		let trajectories = [];
@@ -696,7 +756,74 @@ class MGAFinder {
 			return a[sequence.length] - b[sequence.length];
 		});
 
+		if (trajectories.length === 0) return [];
+
 		console.log(trajectories);
+		console.log(trajectories[0]);
+
+		// Local optimization to optimize best trajectory
+		// For now, I'll use a simple hill climb but in the future I might use a different algorithm here.
+		let besttrajectory = [];
+
+		for (let i = 1; i < sequence.length; i++) {
+			let t1 = trajectories[0][i].prevtransfer.t1;
+			let t2 = trajectories[0][i].prevtransfer.t2;
+
+			besttrajectory.push(t1);
+			besttrajectory.push(trajectories[0][i].prevtransfer.outgoing.x);
+			besttrajectory.push(trajectories[0][i].prevtransfer.outgoing.y);
+			besttrajectory.push(trajectories[0][i].prevtransfer.outgoing.z);
+
+			if (trajectories[0][i].prevtransfer.hasOwnProperty("tdsm")) {
+				besttrajectory.push((trajectories[0][i].prevtransfer.tdsm - t1) / (t2 - t1));
+			} else {
+				besttrajectory.push(0.5);
+			}
+		}
+
+		besttrajectory.push(trajectories[0][sequence.length - 1].prevtransfer.t2);
+		let bestfitness = this.fitness(besttrajectory, sequence, trueinitalt, truefinalalt, includecapture);
+
+		console.log(besttrajectory);
+		console.log(bestfitness);
+
+		for (let i = 0; i < 10000; i++) {
+			let newtrajectory = structuredClone(besttrajectory);
+
+			let curr = 0;
+			for (let j = 0; j < sequence.length; j++) {
+				newtrajectory[5 * j] += normal() * 100;
+
+				if (newtrajectory[5 * j] < curr) newtrajectory[5 * j] = curr + 1;
+
+				curr = newtrajectory[j];
+			}
+
+			for (let j = 0; j < sequence.length - 1; j++) {
+				newtrajectory[5 * j + 1] += normal() * 10;
+				newtrajectory[5 * j + 2] += normal() * 10;
+				newtrajectory[5 * j + 3] += normal() * 10;
+				newtrajectory[5 * j + 4] += normal() * 0.01;
+
+				if (newtrajectory[5 * j + 4] < 0.1) {
+					newtrajectory[5 * j + 4] = 0.1;
+				}
+				if (newtrajectory[5 * j + 4] > 0.9) {
+					newtrajectory[5 * j + 4] = 0.9;
+				}
+			}
+
+			let newfitness = this.fitness(newtrajectory, sequence, trueinitalt, truefinalalt, includecapture);
+
+			if (newfitness < bestfitness) {
+				bestfitness = newfitness;
+				besttrajectory = structuredClone(newtrajectory);
+
+				console.log(newtrajectory, newfitness);
+			}
+		}
+
+		return [besttrajectory, bestfitness];
 	}
 };
 
@@ -716,6 +843,19 @@ onmessage = (e) => {
 
 		console.log(params);
 
-		console.log(mgafinder.planMGATrajectory(...params));
+		let res = mgafinder.planMGATrajectory(...params);
+
+		if (res.length === 0) {
+			postMessage({
+				status: "failure"
+			});
+		} else {
+			res.push(params);
+
+			postMessage({
+				status: "success",
+				result: res
+			});
+		}
 	}
 }

@@ -1,0 +1,1 @@
+The orbit propagator and Lambert solver are based off of pykep's ```propagate_lagrangian``` and ```lambert_problem``` respectively. pykep is licensed under the GPL-3.0 license.

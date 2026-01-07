@@ -1,8 +1,10 @@
 import * as THREE from 'three';
+import { Vector3 } from './vector.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { System } from './system.js';
 import { fillScene, updateScene } from './scenefiller.js';
 import { secsToKerbalTimeString, kerbalTimeToSecs } from './kerbaltime.js';
+import { handleNumericMinMax, handleNumericMinMaxInt, setBodySelectOptions } from './input.js';
 
 // Consts
 const aspectratio = 4 / 3;
@@ -36,6 +38,8 @@ const latestday = document.getElementById("latestday");
 const latesthour = document.getElementById("latesthour");
 const includeinsertion = document.getElementById("includecapture");
 
+let disabled = false;
+
 const addbody = document.getElementById("addbody");
 const subbody = document.getElementById("subbody");
 
@@ -50,64 +54,26 @@ const startsearch = document.getElementById("startsearch");
 
 const errormsg = document.getElementById("errormsg");
 
-function handleNumericMinMax() {
-	if (this.value === "") return;
+let trajectorygroup = new THREE.Group();
+function displayTrajectory(trajectory) {
+	console.log(trajectory);
+	console.log(JSON.stringify(trajectory));
 
-	let numericvalue = Number(this.value);
+	
 
-	if ((this.min !== "") && (numericvalue < Number(this.min))) {
-		this.value = this.min;
+	let sequence = trajectory[2][0];
+	for (let i = 0; i < sequence.length - 1; i++) {
+		let t1 = trajectory[0][5 * i];
+		let state1 = system.getDState(sequence[i], t1);
+		
+		let outgoing = new Vector3(
+			trajectory[0][5 * i + 1],
+			trajectory[0][5 * i + 2],
+			trajectory[0][5 * i + 3]
+		);
+
+		let vout = Vector3.add(outgoing, state1.v);
 	}
-
-	if ((this.max !== "") && (numericvalue > Number(this.max))) {
-		this.value = this.max;
-	}
-}
-
-function handleNumericMinMaxInt() {
-	if (this.value === "") return;
-
-	let numericvalue = Number(this.value);
-
-	if ((this.min !== "") && (numericvalue < Number(this.min))) {
-		this.value = this.min;
-	}
-
-	if ((this.max !== "") && (numericvalue > Number(this.max))) {
-		this.value = this.max;
-	}
-
-	if (!Number.isInteger(numericvalue)) {
-		this.value = Math.round(numericvalue);
-	}
-}
-
-function setBodySelectOptions(element, sys) {
-	element.textContent = "";
-
-	for (let i = 0; i < sys.bodies.length; i++) {
-		if (sys.bodies[i].root) continue; // Cannot currently do flyby sequences with arbitrary solar orbits
-
-		const option = document.createElement("option");
-
-		option.innerText = sys.bodies[i].name;
-
-		element.appendChild(option);
-	}
-}
-
-[initalt, finalalt, minvinf, maxvinf, maxdvdsm, maxduration].forEach((element) => {
-	element.onchange = handleNumericMinMax;
-});
-
-[earliestyear, earliesthour, earliestday, latestyear, latesthour, latestday].forEach((element) => {
-	element.onchange = handleNumericMinMaxInt;
-});
-
-timeslider.oninput = function() {
-	timedisplay.innerText = secsToKerbalTimeString(this.value);
-	time = this.value;
-	needsupdate = true;
 }
 
 function updateCanvasSize() {
@@ -121,8 +87,16 @@ function updateCanvasSize() {
 
 window.onresize = updateCanvasSize;
 
+timeslider.oninput = function() {
+	timedisplay.innerText = secsToKerbalTimeString(this.value);
+	time = this.value;
+	needsupdate = true;
+}
+
 startsearch.onclick = function() {
 	errormsg.innerText = "";
+
+	if (disabled) return;
 
 	let sequence = [initbody.value];
 
@@ -229,11 +203,11 @@ startsearch.onclick = function() {
 			flybydvnums
 		]
 	});
+
+	disabled = true;
 }
 
 addbody.onclick = function() {
-	console.log("add body");
-
 	const flybysettings = document.createElement("div");
 	const descriptor = document.createElement("p");
 
@@ -328,8 +302,6 @@ addbody.onclick = function() {
 subbody.onclick = function() {
 	if (numbodies <= 2) return;
 
-	console.log("sub body");
-
 	let removeelems = inputstack.pop();
 
 	for (let i = 0; i < removeelems.length; i++) {
@@ -365,6 +337,13 @@ let system = new System("https://arolauntech.github.io/kspmga/data/systems/stock
 	setBodySelectOptions(finalbody, sys);
 
 	mgafinder = new Worker(new URL("mga.js", import.meta.url), {type: "module"});
+	mgafinder.onmessage = function(e) {
+		if (e.data.status === "failure") return;
+
+		disabled = false;
+
+		displayTrajectory(e.data.result);
+	}
 
 	mgafinder.postMessage({init: true, system: sys});
 });
