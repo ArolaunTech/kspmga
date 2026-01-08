@@ -42,6 +42,8 @@ let flybydvs = [];
 let maxrevs = [document.getElementById("maxrevs")];
 let inputstack = [];
 
+let displayedtrajectory = [];
+
 function updateCanvasSize() {
 	if (document.body.clientWidth > 1000) {
 		canvas.width = 640;
@@ -57,6 +59,8 @@ timeslider.oninput = function() {
 	timedisplay.innerText = secsToKerbalTimeString(this.value);
 	time = this.value;
 	renderer.updateSceneWithSystem(system, time);
+
+	if (displayedtrajectory.length > 0) renderer.updatePodTrajectory(displayedtrajectory, system, time);
 }
 
 function startMGASearch() {
@@ -156,6 +160,8 @@ function startMGASearch() {
 
 		if (e.data.status === "failure") return;
 
+		displayedtrajectory = e.data.result;
+
 		trajdetailsp.innerText = renderer.displayTrajectory(e.data.result, system);
 
 		timeslider.min = e.data.result[0][0];
@@ -164,6 +170,7 @@ function startMGASearch() {
 		timedisplay.innerText = secsToKerbalTimeString(timeslider.value);
 		time = timeslider.value;
 		renderer.updateSceneWithSystem(system, time);
+		renderer.updatePodTrajectory(e.data.result, system, time);
 
 		mgafinder.terminate();
 	}

@@ -36,15 +36,29 @@ export class Renderer {
 
 		this.groups = [];
 		this.trajectorygroup = new THREE.Group();
-		this.craftgroup = new THREE.Group();
 		this.scene.add(this.trajectorygroup);
-		this.scene.add(this.craftgroup);
 
 		this.loader = new THREE.TextureLoader();
+
+		this.podsprite = this.createPodSprite();
 	}
 
 	createPodSprite() {
-		const texture = this.loader.load("");
+		const texture = this.loader.load("https://arolauntech.github.io/kspmga/sprites/pod.png");
+
+		const spritematerial = new THREE.SpriteMaterial({
+			sizeAttenuation: false, 
+			map: texture,
+			depthTest: false
+		});
+
+		const sprite = new THREE.Sprite(spritematerial);
+		sprite.scale.set(0.05, 0.05, 1);
+		sprite.visible = false;
+
+		this.scene.add(sprite);
+
+		return sprite;
 	}
 
 	fillSceneWithSystem(system) {
@@ -136,6 +150,8 @@ export class Renderer {
 
 		disposeHierarchy(this.trajectorygroup);
 		this.trajectorygroup.clear();
+
+		this.podsprite.visible = true;
 
 		let sequence = trajectory[2][0];
 		let parent = system.bodies[system.bodymap.get(sequence[0])].parent;
@@ -264,6 +280,64 @@ export class Renderer {
 		}
 
 		return trajectorydetailstring;
+	}
+
+	updatePodTrajectory(trajectory, system, time) {
+		let sequence = trajectory[2][0];
+		let parent = system.bodies[system.bodymap.get(sequence[0])].parent;
+		let mu = system.bodies[system.bodymap.get(parent)].gravparameter;
+
+		for (let i = 0; i < sequence.length - 1; i++) {
+			let t1 = trajectory[0][5 * i];
+			let t2 = trajectory[0][5 * i + 5];
+
+			if (time > t2) continue;
+
+			let state1 = system.getDState(sequence[i], t1);
+			let state2 = system.getDState(sequence[i + 1], t2);
+
+			let outgoing = new Vector3(
+				trajectory[0][5 * i + 1],
+				trajectory[0][5 * i + 2],
+				trajectory[0][5 * i + 3]
+			);
+
+			let vout = Vector3.add(outgoing, state1.v);
+
+			let todsm = trajectory[0][5 * i + 4] * (t2 - t1);
+			let tdsm = t1 + todsm;
+
+			if (time < tdsm) {
+				let podstate = propagate(state1.r, vout, (time - t1), mu);
+
+				this.podsprite.position.set(podstate.r.x * this.scale, podstate.r.z * this.scale, -podstate.r.y * this.scale);
+				return;
+			}
+
+			let statedsm = propagate(state1.r, vout, todsm, mu);
+
+			let sols = lambert(statedsm.r, state2.r, (1 - trajectory[0][5 * i + 4]) * (t2 - t1), mu, 5, false);
+
+			let mindvdsm = Infinity;
+			let bestvafter;
+			let bestvin;
+
+			for (let j = 0; j < sols.length; j++) {
+				let dvdsm = Vector3.sub(sols[j][0], statedsm.v).norm;
+
+				if (dvdsm < mindvdsm) {
+					mindvdsm = dvdsm;
+					bestvafter = sols[j][0];
+					bestvin = Vector3.sub(sols[j][1], state2.v);
+				}
+			}
+
+			let podstate = propagate(statedsm.r, bestvafter, time - tdsm, mu);
+
+			this.podsprite.position.set(podstate.r.x * this.scale, podstate.r.z * this.scale, -podstate.r.y * this.scale);
+			
+			return;
+		}
 	}
 
 	createAnimationCallback(renderer) {

@@ -462,6 +462,7 @@ class MGAFinder {
 
 		let tree = new TrajectoryTree(0, 0, {});
 		let jiggle = maxdvdsm / 5000;
+		let timejiggle = 5000 * maxdvdsm;
 
 		let parent = this.system.bodies[this.system.bodymap.get(sequence[0])].parent;
 		let mu = this.system.bodies[this.system.bodymap.get(parent)].gravparameter;
@@ -613,30 +614,48 @@ class MGAFinder {
 						let state1 = this.system.getDState(sequence[randomnode.planet], start);
 						let stateDSM = propagate(state1.r, Vector3.add(state1.v, jiggled), propagatetime, mu);
 
-						let dsmtransfers = this.findTransfersInt(stateDSM.r, stateDSM.v, this.system.bodies[this.system.bodymap.get(sequence[randomnode.planet + 1])].orbit, start + propagatetime, dvdsm, mu, maxrevs[randomnode.planet]);
-
 						let jiggledviolation = this.violation(sequence[randomnode.planet], previncoming, jiggled);
 						if (jiggledviolation > maxflybydv) continue;
 
-						for (let j = 0; j < dsmtransfers.length; j++) {
-							let dsmtransfer = {
-								t1: start,
-								tdsm: start + propagatetime,
-								t2: dsmtransfers[j].t2,
-								rdsm: stateDSM.r,
-								outgoing: jiggled,
-								outgoingmag: vinf,
-								dsm: dsmtransfers[j].outgoing,
-								dsmmag: dvdsm,
-								incoming: dsmtransfers[j].incoming,
-								incomingmag: dsmtransfers[j].incomingmag 
-							};
+						let t2 = transfers[i].t2 + normal() * timejiggle;
 
-							randomnode.children.push(new TrajectoryTree(randomnode.planet + 1, randomnode.dvused + dvdsm + jiggledviolation, dsmtransfer));
-							
-							if (randomnode.planet === sequence.length - 2) numnodes++;
-							totalnodes++;
+						let state2 = this.system.getDState(sequence[randomnode.planet + 1], t2);
+
+						let sols = lambert(stateDSM.r, state2.r, t2 - start - propagatetime, mu, 5, false);
+
+						let mindvdsm = Infinity;
+						let bestvout;
+						let bestvin;
+
+						for (let j = 0; j < sols.length; j++) {
+							let dvdsm = Vector3.sub(sols[j][0], stateDSM.v).norm;
+
+							if (dvdsm < mindvdsm) {
+								mindvdsm = dvdsm;
+								bestvout = sols[j][0];
+								bestvin = sols[j][1];
+							}
 						}
+
+						if (mindvdsm > maxdvdsm) continue;
+
+						let dsmtransfer = {
+							t1: start,
+							t2: t2,
+							tdsm: start + propagatetime,
+							rdsm: stateDSM.r,
+							outgoing: jiggled,
+							outgoingmag: vinf,
+							dsm: Vector3.sub(bestvout, stateDSM.v),
+							dsmmag: mindvdsm,
+							incoming: Vector3.sub(bestvin, state2.v),
+							incomingmag: Vector3.sub(bestvin, state2.v).norm
+						};
+
+						randomnode.children.push(new TrajectoryTree(randomnode.planet + 1, randomnode.dvused + mindvdsm + jiggledviolation, dsmtransfer));
+								
+						if (randomnode.planet === sequence.length - 2) numnodes++;
+						totalnodes++;
 					}
 				}
 
@@ -644,20 +663,9 @@ class MGAFinder {
 					let state1 = this.system.getDState(sequence[randomnode.planet], start);
 					let vel = state1.v.norm;
 					let dist1 = state1.r.norm;
-	
-					let maxvel = vel + vinf;
+
 					let minvel = Math.max(0, vel - vinf);
-	
-					let maxsma = 1 / (2 / dist1 - maxvel * maxvel / mu);
-					let minsma = 1 / (2 / dist1 - maxvel * maxvel / mu);
-	
-					let maxperiod;
-	
-					if (maxsma <= 0) {
-						maxperiod = Infinity;
-					} else {
-						maxperiod = 2 * Math.PI * maxsma * Math.sqrt(maxsma / mu);
-					}
+					let minsma = 1 / (2 / dist1 - minvel * minvel / mu);
 					let minperiod = 2 * Math.PI * minsma * Math.sqrt(minsma / mu);
 	
 					let currperiod = this.system.bodies[this.system.bodymap.get(sequence[randomnode.planet])].orbit.period;
@@ -666,14 +674,18 @@ class MGAFinder {
 						for (let b = 1; b <= 100; b++) {
 							let period = currperiod * a / b;
 	
-							if (period > maxperiod) continue;
 							if (period < minperiod) break;
 	
 							let sma = Math.cbrt(mu * Math.pow(period / 2 / Math.PI, 2));
+
+							if (sma < dist1 / 2) break; // Periapsis < 0
+
 							let targetvel = Math.sqrt(mu * (2 / dist1 - 1 / sma));
 	
 							let vforward = (targetvel * targetvel - vinf * vinf - vel * vel) / (2 * vel);
 							let vside = Math.sqrt(vinf * vinf - vforward * vforward);
+
+							if (!Number.isFinite(vside)) continue;
 	
 							let forwarddir = Vector3.normalize(state1.v);
 							let sidedir1 = Vector3.normalize(Vector3.cross(new Vector3(0, 0, 1), forwarddir));
@@ -688,38 +700,58 @@ class MGAFinder {
 									Vector3.mult(sidedir2, vside / vinf * Math.sin(angle))
 								)
 							);
-	
+
 							let jiggled = Vector3.mult(this.mutate(nodsmoutdir, jiggle), vinf);
-							let dvdsm = Math.random() * maxdvdsm;
 
 							let jiggledviolation = this.violation(sequence[randomnode.planet], previncoming, jiggled);
 							if (jiggledviolation > maxflybydv) continue;
 	
 							let propagatetime = Math.random() * currperiod * a;
-	
+
 							let stateDSM = propagate(state1.r, Vector3.add(state1.v, jiggled), propagatetime, mu);
 	
-							let dsmtransfers = this.findTransfersInt(stateDSM.r, stateDSM.v, this.system.bodies[this.system.bodymap.get(sequence[randomnode.planet + 1])].orbit, start + propagatetime, dvdsm, mu, maxrevs[randomnode.planet]);
-	
-							for (let j = 0; j < dsmtransfers.length; j++) {
-								let dsmtransfer = {
-									t1: start,
-									tdsm: start + propagatetime,
-									t2: dsmtransfers[j].t2,
-									rdsm: stateDSM.r,
-									outgoing: jiggled,
-									outgoingmag: vinf,
-									dsm: dsmtransfers[j].outgoing,
-									dsmmag: dvdsm,
-									incoming: dsmtransfers[j].incoming,
-									incomingmag: dsmtransfers[j].incomingmag 
-								};
-	
-								randomnode.children.push(new TrajectoryTree(randomnode.planet + 1, randomnode.dvused + dvdsm + jiggledviolation, dsmtransfer));
-								
-								if (randomnode.planet === sequence.length - 2) numnodes++;
-								totalnodes++;
+							let t2 = start + currperiod * a;
+							let tdsm = start + propagatetime;
+
+							let t2jiggled = start + currperiod * a + normal() * timejiggle;
+
+							let state2 = this.system.getDState(sequence[randomnode.planet + 1], t2jiggled);
+
+							let sols = lambert(stateDSM.r, state2.r, t2jiggled - tdsm, mu, 5, false);
+
+							let mindvdsm = Infinity;
+							let bestvout;
+							let bestvin;
+
+							for (let j = 0; j < sols.length; j++) {
+								let dvdsm = Vector3.sub(sols[j][0], stateDSM.v).norm;
+
+								if (dvdsm < mindvdsm) {
+									mindvdsm = dvdsm;
+									bestvout = sols[j][0];
+									bestvin = sols[j][1];
+								}
 							}
+
+							if (mindvdsm > maxdvdsm) continue;
+
+							let dsmtransfer = {
+								t1: start,
+								t2: t2jiggled,
+								tdsm: tdsm,
+								rdsm: stateDSM.r,
+								outgoing: jiggled,
+								outgoingmag: vinf,
+								dsm: Vector3.sub(bestvout, stateDSM.v),
+								dsmmag: mindvdsm,
+								incoming: Vector3.sub(bestvin, state2.v),
+								incomingmag: Vector3.sub(bestvin, state2.v).norm
+							};
+	
+							randomnode.children.push(new TrajectoryTree(randomnode.planet + 1, randomnode.dvused + mindvdsm + jiggledviolation, dsmtransfer));
+							
+							if (randomnode.planet === sequence.length - 2) numnodes++;
+							totalnodes++;
 						}
 					}
 				}
