@@ -36,9 +36,15 @@ export class Renderer {
 
 		this.groups = [];
 		this.trajectorygroup = new THREE.Group();
+		this.craftgroup = new THREE.Group();
 		this.scene.add(this.trajectorygroup);
+		this.scene.add(this.craftgroup);
 
 		this.loader = new THREE.TextureLoader();
+	}
+
+	createPodSprite() {
+		const texture = this.loader.load("");
 	}
 
 	fillSceneWithSystem(system) {
@@ -154,25 +160,26 @@ export class Renderer {
 
 			let vout = Vector3.add(outgoing, state1.v);
 
-			let outgoingorbit = new Orbit();
-			outgoingorbit.fromRV(0, state1.r, vout, mu);
-
 			let todsm = trajectory[0][5 * i + 4] * (t2 - t1);
 			let tdsm = t1 + todsm;
 
-			if (todsm > outgoingorbit.period) todsm = outgoingorbit.period;
+			let sma = 1 / (2 / state1.r - (vout.norm * vout.norm) / mu);
+			let period = Infinity;
+			if (sma > 0) {
+				period = 2 * Math.PI * Math.sqrt(sma * sma * sma / mu);
+			}
+
+			if (todsm > period) todsm = period;
 
 			const segments = 100;
 			let points = [];
 			for (let j = 0; j <= segments; j++) {
 				let time = todsm * j / segments;
 
-				let interstate = outgoingorbit.getState(time);
+				let interstate = propagate(state1.r, vout, time, mu);
 
 				points.push(new THREE.Vector3(interstate.r.x * this.scale, interstate.r.z * this.scale, -interstate.r.y * this.scale));
 			}
-
-			console.log(points, t1, tdsm);
 
 			const outorbitdisplay = new LineGeometry();
 			outorbitdisplay.setFromPoints(points);
@@ -199,22 +206,24 @@ export class Renderer {
 				}
 			}
 
-			let incomingorbit = new Orbit();
-			incomingorbit.fromRV(0, statedsm.r, bestvafter, mu);
-
 			let fromdsm = (1 - trajectory[0][5 * i + 4]) * (t2 - t1);
-			if (fromdsm > incomingorbit.period) fromdsm = incomingorbit.period;
+
+			sma = 1 / (2 / statedsm.r - (bestvafter.norm * bestvafter.norm) / mu);
+			period = Infinity;
+			if (sma > 0) {
+				period = 2 * Math.PI * Math.sqrt(sma * sma * sma / mu);
+			}
+
+			if (fromdsm > period) fromdsm = period;
 
 			points = [];
 			for (let j = 0; j <= segments; j++) {
 				let time = fromdsm * j / segments;
 
-				let interstate = incomingorbit.getState(time);
+				let interstate = propagate(statedsm.r, bestvafter, time, mu);
 
 				points.push(new THREE.Vector3(interstate.r.x * this.scale, interstate.r.z * this.scale, -interstate.r.y * this.scale));
 			}
-
-			console.log(points, tdsm, t2);
 
 			const inorbitdisplay = new LineGeometry();
 			inorbitdisplay.setFromPoints(points);

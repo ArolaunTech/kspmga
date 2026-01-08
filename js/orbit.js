@@ -41,54 +41,6 @@ export class Orbit {
 		return this.sma * (1 + this.eccentricity);
 	}
 
-	fromRV(t, r0, v0, mu) {
-		// RV to COE
-		this.mu = mu;
-		this.epoch = t;
-
-		let dist0 = r0.norm;
-		let vel0 = v0.norm;
-		let rv0 = Vector3.dot(r0, v0) / dist0;
-
-		let energy = vel0 * vel0 / 2 - mu / dist0;
-
-		this.sma = -mu / 2 / energy;
-
-		let hvector = Vector3.cross(r0, v0);
-		let h = hvector.norm;
-		
-		let evector = Vector3.sub(Vector3.mult(Vector3.cross(v0, hvector), 1 / mu), Vector3.normalize(r0));
-
-		this.eccentricity = evector.norm;
-		this.inclination = Math.acos(hvector.z / h);
-
-		let an = Vector3.cross(new Vector3(0, 0, 1), hvector);
-
-		this.longascendingnode = Math.atan2(an.y, an.x);
-		this.argperiapsis = Math.acos(Vector3.dot(evector, an) / this.eccentricity / an.norm);
-
-		if (evector.z < 0) this.argperiapsis = 2 * Math.PI - this.argperiapsis;
-
-		let cosE = (1 - dist0 / this.sma) / this.eccentricity;
-		let E;
-
-		if (this.sma > 0) {
-			E = Math.acos(cosE);
-		} else {
-			E = Math.acosh(cosE);
-		}
-
-		if (rv0 < 0) {
-			E *= -1;
-		}
-
-		if (this.sma > 0) {
-			this.meananomalyatepoch = E - this.eccentricity * Math.sin(E);
-		} else {
-			this.meananomalyatepoch = this.eccentricity * Math.sinh(E) - E;
-		}
-	}
-
 	meananomaly(time) {
 		let anomaly = this.meananomalyatepoch + (time - this.epoch) * this.meanmotion;
 
