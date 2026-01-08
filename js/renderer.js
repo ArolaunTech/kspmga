@@ -172,6 +172,8 @@ export class Renderer {
 				points.push(new THREE.Vector3(interstate.r.x * this.scale, interstate.r.z * this.scale, -interstate.r.y * this.scale));
 			}
 
+			console.log(points, t1, tdsm);
+
 			const outorbitdisplay = new LineGeometry();
 			outorbitdisplay.setFromPoints(points);
 			const outorbitmaterial = new LineMaterial({color: 0xffffff, linewidth: 2});
@@ -211,6 +213,8 @@ export class Renderer {
 
 				points.push(new THREE.Vector3(interstate.r.x * this.scale, interstate.r.z * this.scale, -interstate.r.y * this.scale));
 			}
+
+			console.log(points, tdsm, t2);
 
 			const inorbitdisplay = new LineGeometry();
 			inorbitdisplay.setFromPoints(points);

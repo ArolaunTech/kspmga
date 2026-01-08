@@ -830,32 +830,29 @@ class MGAFinder {
 let mgafinder;
 
 onmessage = (e) => {
-	if (e.data.init) {
-		let copiedsystem = e.data.system;
+	let copiedsystem = e.data.system;
+	for (let i = 0; i < copiedsystem.bodies.length; i++) {
+		copiedsystem.bodies[i].orbit = Object.setPrototypeOf(copiedsystem.bodies[i].orbit, Orbit.prototype);
+	}
 
-		for (let i = 0; i < copiedsystem.bodies.length; i++) {
-			copiedsystem.bodies[i].orbit = Object.setPrototypeOf(copiedsystem.bodies[i].orbit, Orbit.prototype);
-		}
+	mgafinder = new MGAFinder(Object.setPrototypeOf(copiedsystem, System.prototype));
 
-		mgafinder = new MGAFinder(Object.setPrototypeOf(copiedsystem, System.prototype));
+	let params = e.data.params;
+
+	console.log(params);
+
+	let res = mgafinder.planMGATrajectory(...params);
+
+	if (res.length === 0) {
+		postMessage({
+			status: "failure"
+		});
 	} else {
-		let params = e.data.params;
+		res.push(params);
 
-		console.log(params);
-
-		let res = mgafinder.planMGATrajectory(...params);
-
-		if (res.length === 0) {
-			postMessage({
-				status: "failure"
-			});
-		} else {
-			res.push(params);
-
-			postMessage({
-				status: "success",
-				result: res
-			});
-		}
+		postMessage({
+			status: "success",
+			result: res
+		});
 	}
 }

@@ -30,6 +30,7 @@ const includeinsertion = document.getElementById("includecapture");
 const addbody = document.getElementById("addbody");
 const subbody = document.getElementById("subbody");
 const startsearch = document.getElementById("startsearch");
+const stopsearch = document.getElementById("stopsearch");
 const errormsg = document.getElementById("errormsg");
 const trajdetails = document.getElementById("trajdetailsp");
 
@@ -58,7 +59,7 @@ timeslider.oninput = function() {
 	renderer.updateSceneWithSystem(system, time);
 }
 
-startsearch.onclick = function() {
+function startMGASearch() {
 	errormsg.innerText = "";
 
 	if (disabled) return;
@@ -149,10 +150,26 @@ startsearch.onclick = function() {
 		maxrevnums.push(Number(maxrevs[i].value));
 	}
 
-	console.log("h", mgafinder);
+	mgafinder = new Worker(new URL("mga.js", import.meta.url), {type: "module"});
+	mgafinder.onmessage = function(e) {
+		disabled = false;
+
+		if (e.data.status === "failure") return;
+
+		trajdetailsp.innerText = renderer.displayTrajectory(e.data.result, system);
+
+		timeslider.min = e.data.result[0][0];
+		timeslider.max = e.data.result[0][e.data.result[0].length - 1];
+
+		timedisplay.innerText = secsToKerbalTimeString(timeslider.value);
+		time = timeslider.value;
+		renderer.updateSceneWithSystem(system, time);
+
+		mgafinder.terminate();
+	}
 
 	mgafinder.postMessage({
-		init: false,
+		system: system,
 		params: [
 			sequence,
 			initaltnum,
@@ -171,6 +188,15 @@ startsearch.onclick = function() {
 
 	disabled = true;
 }
+
+function stopMGASearch() {
+	mgafinder.terminate();
+
+	disabled = false;
+}
+
+startsearch.onclick = startMGASearch;
+stopsearch.onclick = stopMGASearch;
 
 addbody.onclick = function() {
 	const flybysettings = document.createElement("div");
@@ -290,29 +316,12 @@ const renderer = new Renderer({
 	htmlCanvas: canvas
 });
 
-let mgafinder;
 let system = new System("https://arolauntech.github.io/kspmga/data/systems/stock.json", (sys) => {
 	renderer.fillSceneWithSystem(sys);
 	renderer.updateSceneWithSystem(sys, 0);
 
 	setBodySelectOptions(initbody, sys);
 	setBodySelectOptions(finalbody, sys);
-
-	mgafinder = new Worker(new URL("mga.js", import.meta.url), {type: "module"});
-	mgafinder.onmessage = function(e) {
-		disabled = false;
-
-		if (e.data.status === "failure") return;
-
-		trajdetailsp.innerText = renderer.displayTrajectory(e.data.result, sys);
-
-		timeslider.min = e.data.result[0][0];
-		timeslider.max = e.data.result[0][e.data.result[0].length - 1];
-
-		timedisplay.innerText = secsToKerbalTimeString(timeslider.value);
-		time = timeslider.value;
-		renderer.updateSceneWithSystem(system, time);
-	}
-
-	mgafinder.postMessage({init: true, system: sys});
 });
+
+let mgafinder;

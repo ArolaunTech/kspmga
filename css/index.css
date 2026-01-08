@@ -13,6 +13,9 @@
 	--button-light: #3648bf;
 	--button-mid: #2d4c9f;
 	--button-dark: #24307f;
+	--red-button-light: #a6160c;
+	--red-button-mid: #701009;
+	--red-button-dark: #4a0904;
 	--link-color: #80c0ff;
 	--invalid-color: #e85f84;
 	--error-red: #eb3455;
@@ -263,10 +266,26 @@ input[type="number"].timeinput {
 	padding: 7px;
 	border-radius: 5px;
 	transition: background-image .1s;
+	margin: 5px;
 }
 
 #startsearch:hover {
 	background-image: linear-gradient(var(--button-mid), var(--button-dark));
+}
+
+#stopsearch {
+	background-image: linear-gradient(var(--red-button-light), var(--red-button-dark));
+	color: white;
+	border: none;
+	font-size: 14px;
+	padding: 7px;
+	border-radius: 5px;
+	transition: background-image .1s;
+	margin: 5px;
+}
+
+#stopsearch:hover {
+	background-image: linear-gradient(var(--red-button-mid), var(--red-button-dark));
 }
 
 #system {
