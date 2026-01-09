@@ -70,12 +70,28 @@ function startMGASearch() {
 	if (disabled) return;
 
 	let sequence = [initbody.value];
+	let parent = system.bodies[system.bodymap.get(initbody.value)].parent;
+	if (!system.bodies[system.bodymap.get(parent)].root) {
+		errormsg.innerText = "This calculator only supports planets currently.";
+		return;
+	}
 
 	for (let i = 0; i < intermediatebodies.length; i++) {
 		sequence.push(intermediatebodies[i].value);
+
+		parent = system.bodies[system.bodymap.get(sequence[i + 1])].parent;
+		if (!system.bodies[system.bodymap.get(parent)].root) {
+			errormsg.innerText = "This calculator only supports planets currently.";
+			return;
+		}
 	}
 
 	sequence.push(finalbody.value);
+	parent = system.bodies[system.bodymap.get(finalbody.value)].parent;
+	if (!system.bodies[system.bodymap.get(parent)].root) {
+		errormsg.innerText = "This calculator only supports planets currently.";
+		return;
+	}
 
 	console.log(sequence);
 
