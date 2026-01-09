@@ -291,7 +291,7 @@ export class Renderer {
 			let t1 = trajectory[0][5 * i];
 			let t2 = trajectory[0][5 * i + 5];
 
-			if (time > t2) continue;
+			if ((time > t2) && (i < sequence.length - 2)) continue;
 
 			let state1 = system.getDState(sequence[i], t1);
 			let state2 = system.getDState(sequence[i + 1], t2);

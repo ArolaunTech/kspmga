@@ -245,13 +245,13 @@ class MGAFinder {
 		let out = [];
 
 		for (let i = 0; i < found; i++) {
-			for (let N = 0; N <= maxrevs; N++) {
-				for (let M = 0; M <= 100; M++) {
+			for (let M = 0; M <= maxrevs; M++) {
+				for (let N = 0; N <= 100; N++) {
 					let mincompat = minfas[i] + N * period - infmult(M, maxgas[i]);
 					let maxcompat = maxfas[i] + N * period - infmult(M, mingas[i]);
 
-					if (mincompat > 0) continue;
-					if (maxcompat < 0) break;
+					if (mincompat > 0) break;
+					if (maxcompat < 0) continue;
 
 					for (let j = 0; j < discretizationSteps - 1; j++) {
 						if (!Number.isFinite(fas[i][j])) continue;
@@ -316,6 +316,8 @@ class MGAFinder {
 
 						if (!Number.isFinite(mid)) continue;
 						if (Vector3.sub(propagate(r1, vels[i], mid - t1, mu).r, state2.r).norm > 1e4) continue;
+						if (!Number.isFinite(outgoing.norm)) continue; // Resonant orbits can cause this - I saw this cause an error with a transfer that encountered Moho after 6 revolutions of Moho
+						if (!Number.isFinite(incoming.norm)) continue;
 
 						//if (Math.abs((mid - t1) / 9201600 - 0.5) < 0.1)
 						//	console.log(Vector3.sub(propagate(r1, vels[i], mid - t1, mu).r, state2.r).norm, mid - t1, (mid - t1) / 9201600, outgoing.norm, incoming.norm);
@@ -472,7 +474,12 @@ class MGAFinder {
 		let totalnodes = 0;
 		for (let steps = 0; steps < 50000; steps++) {
 			if (steps % 1000 === 0) {
-				console.log(steps, numnodes, totalnodes);
+				postMessage({
+					status: "report",
+					steps: steps,
+					foundtrajectories: numnodes,
+					nodes: totalnodes
+				});
 			}
 			
 			if (numnodes > 2500) break;
@@ -537,18 +544,20 @@ class MGAFinder {
 	
 					let currperiod = this.system.bodies[this.system.bodymap.get(sequence[0])].orbit.period;
 	
-					for (let a = 1; a <= maxrevs[0]; a++) {
-						for (let b = 1; b <= 100; b++) {
+					for (let b = 1; b <= maxrevs[0]; b++) {
+						for (let a = 1; a <= 100; a++) {
 							let period = currperiod * a / b;
 	
-							if (period > maxperiod) continue;
-							if (period < minperiod) break;
+							if (period > maxperiod) break;
+							if (period < minperiod) continue;
 	
 							let sma = Math.cbrt(mu * Math.pow(period / 2 / Math.PI, 2));
 							let targetvel = Math.sqrt(mu * (2 / dist1 - 1 / sma));
 	
 							let vforward = (targetvel * targetvel - vinf * vinf - vel * vel) / (2 * vel);
 							let vside = Math.sqrt(vinf * vinf - vforward * vforward);
+
+							if (!Number.isFinite(vside)) continue;
 	
 							let forwarddir = Vector3.normalize(state1.v);
 							let sidedir1 = Vector3.normalize(Vector3.cross(new Vector3(0, 0, 1), forwarddir));
@@ -621,6 +630,8 @@ class MGAFinder {
 
 						let state2 = this.system.getDState(sequence[randomnode.planet + 1], t2);
 
+						//console.log(transfers[i]);
+
 						let sols = lambert(stateDSM.r, state2.r, t2 - start - propagatetime, mu, 5, false);
 
 						let mindvdsm = Infinity;
@@ -670,19 +681,22 @@ class MGAFinder {
 	
 					let currperiod = this.system.bodies[this.system.bodymap.get(sequence[randomnode.planet])].orbit.period;
 	
-					for (let a = 1; a <= maxrevs[randomnode.planet]; a++) {
-						for (let b = 1; b <= 100; b++) {
+					for (let b = 1; b <= maxrevs[randomnode.planet]; b++) {
+						for (let a = 1; a <= 100; a++) {
 							let period = currperiod * a / b;
 	
-							if (period < minperiod) break;
+							if (period < minperiod) continue;
 	
 							let sma = Math.cbrt(mu * Math.pow(period / 2 / Math.PI, 2));
 
-							if (sma < dist1 / 2) break; // Periapsis < 0
+							if (sma < dist1 / 2) continue; // Periapsis < 0
 
 							let targetvel = Math.sqrt(mu * (2 / dist1 - 1 / sma));
 	
 							let vforward = (targetvel * targetvel - vinf * vinf - vel * vel) / (2 * vel);
+
+							if (vforward > vinf) break;
+
 							let vside = Math.sqrt(vinf * vinf - vforward * vforward);
 
 							if (!Number.isFinite(vside)) continue;

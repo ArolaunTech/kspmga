@@ -33,6 +33,7 @@ const startsearch = document.getElementById("startsearch");
 const stopsearch = document.getElementById("stopsearch");
 const errormsg = document.getElementById("errormsg");
 const trajdetails = document.getElementById("trajdetailsp");
+const searchdetails = document.getElementById("searchdetails");
 
 let disabled = false;
 
@@ -156,7 +157,12 @@ function startMGASearch() {
 
 	mgafinder = new Worker(new URL("mga.js", import.meta.url), {type: "module"});
 	mgafinder.onmessage = function(e) {
-		disabled = false;
+		if (e.data.status !== "report") {
+			disabled = false;
+		} else {
+			searchdetails.innerText = `Found ${e.data.foundtrajectories} trajectories - ${e.data.steps} steps in`;
+			return;
+		}
 
 		if (e.data.status === "failure") return;
 
@@ -172,7 +178,9 @@ function startMGASearch() {
 		renderer.updateSceneWithSystem(system, time);
 		renderer.updatePodTrajectory(e.data.result, system, time);
 
+		mgafinder.onmessage = undefined;
 		mgafinder.terminate();
+		mgafinder = undefined;
 	}
 
 	mgafinder.postMessage({
@@ -197,7 +205,9 @@ function startMGASearch() {
 }
 
 function stopMGASearch() {
+	mgafinder.onmessage = undefined;
 	mgafinder.terminate();
+	mgafinder = undefined;
 
 	disabled = false;
 }
