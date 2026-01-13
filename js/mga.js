@@ -5,6 +5,7 @@ import { Orbit, propagate } from './orbit.js';
 import { TrajectoryTree } from './tree.js';
 import { randint, normal } from './random.js';
 import { lambert } from './lambert.js';
+import { calcEjectiondV, violation } from './trajectorycalcs.js';
 
 //Compute optimal MGA trajectories
 function infmult(M, ga) {
@@ -347,43 +348,6 @@ class MGAFinder {
 		return this.findTransfersInt(state1.r, state1.v, this.system.bodies[this.system.bodymap.get(planet2)].orbit, t1, rv, this.system.bodies[this.system.bodymap.get(parent)].gravparameter, maxrevs);
 	}
 
-	calcEjectiondV(body, vinf, circalt) {
-		let stdgp = this.system.bodies[this.system.bodymap.get(body)].gravparameter;
-		let soi = this.system.bodies[this.system.bodymap.get(body)].soi;
-
-		let energy = 0.5 * vinf * vinf - stdgp / soi;
-		let sma = -stdgp / 2 / energy;
-
-		let ejectionvel = Math.sqrt(stdgp * (2 / circalt - 1 / sma));
-		let circvel = Math.sqrt(stdgp / circalt);
-
-		return ejectionvel - circvel;
-	}
-
-	calcCosDeflection(body, vinf) {
-		let stdgp = this.system.bodies[this.system.bodymap.get(body)].gravparameter;
-		let minalt = this.system.bodies[this.system.bodymap.get(body)].radius + this.system.bodies[this.system.bodymap.get(body)].atmodepth + 10000;
-
-		return 1 - 2 * Math.pow(1 / (1 + minalt * vinf * vinf / stdgp), 2);
-	}
-
-	violation(body, vin, vout) {
-		let innorm = vin.norm;
-		let outnorm = vout.norm;
-
-		let cosmaxdeflection = this.calcCosDeflection(body, innorm);
-		let cosdeflection = Vector3.dot(vin, vout) / innorm / outnorm;
-
-		if (cosdeflection > cosmaxdeflection) {
-			return Math.abs(outnorm - innorm);
-		}
-
-		let sindir = Vector3.normalize(Vector3.cross(Vector3.cross(vin, vout), vin));
-		let closest = Vector3.add(Vector3.mult(vin, cosmaxdeflection), Vector3.mult(sindir, innorm * Math.sqrt(1 - cosmaxdeflection * cosmaxdeflection)));
-
-		return Vector3.sub(closest, vout).norm;
-	}
-
 	mutate(dir, jiggle) {
 		let out = Vector3.add(dir, new Vector3(jiggle * normal(), jiggle * normal(), jiggle * normal()));
 
@@ -396,7 +360,7 @@ class MGAFinder {
 
 		let outgoing = new Vector3(trajectory[1], trajectory[2], trajectory[3]);
 
-		let dv = this.calcEjectiondV(sequence[0], outgoing.norm, initalt);
+		let dv = calcEjectiondV(sequence[0], outgoing.norm, initalt, this.system);
 
 		// Iterate over each leg
 		for (let i = 0; i < sequence.length - 1; i++) {
@@ -436,7 +400,7 @@ class MGAFinder {
 			if (i === sequence.length - 2) {
 				// Capture
 				if (includecapture) {
-					dv += this.calcEjectiondV(sequence[i + 1], bestincoming.norm, finalalt);
+					dv += calcEjectiondV(sequence[i + 1], bestincoming.norm, finalalt, this.system);
 				}
 			} else {
 				// Flyby
@@ -446,7 +410,7 @@ class MGAFinder {
 					trajectory[5 * i + 8]
 				);
 
-				dv += this.violation(sequence[i + 1], bestincoming, postflybyoutgoing);
+				dv += violation(sequence[i + 1], bestincoming, postflybyoutgoing, this.system);
 			}
 		}
 
@@ -516,7 +480,7 @@ class MGAFinder {
 				for (let i = 0; i < transfers.length; i++) {
 					//if (Math.random() < 0.9) continue;
 
-					randomnode.children.push(new TrajectoryTree(1, this.calcEjectiondV(sequence[0], vinf, trueinitalt), transfers[i]));
+					randomnode.children.push(new TrajectoryTree(1, calcEjectiondV(sequence[0], vinf, trueinitalt, this.system), transfers[i]));
 				
 					if (sequence.length === 2) numnodes++;
 					totalnodes++;
@@ -576,7 +540,7 @@ class MGAFinder {
 							randomnode.children.push(
 								new TrajectoryTree(
 									1, 
-									this.calcEjectiondV(sequence[0], vinf, trueinitalt), 
+									calcEjectiondV(sequence[0], vinf, trueinitalt, this.system), 
 									{
 										t1: start,
 										t2: start + currperiod * a, 
@@ -605,7 +569,7 @@ class MGAFinder {
 
 				for (let i = 0; i < transfers.length; i++) {
 					//if (Math.random() < 0.9) continue;
-					let nonjiggledviolation = this.violation(sequence[randomnode.planet], previncoming, transfers[i].outgoing);
+					let nonjiggledviolation = violation(sequence[randomnode.planet], previncoming, transfers[i].outgoing, this.system);
 					if (nonjiggledviolation < maxflybydv) {
 						randomnode.children.push(new TrajectoryTree(randomnode.planet + 1, randomnode.dvused + nonjiggledviolation, transfers[i]));
 					
@@ -623,7 +587,7 @@ class MGAFinder {
 						let state1 = this.system.getDState(sequence[randomnode.planet], start);
 						let stateDSM = propagate(state1.r, Vector3.add(state1.v, jiggled), propagatetime, mu);
 
-						let jiggledviolation = this.violation(sequence[randomnode.planet], previncoming, jiggled);
+						let jiggledviolation = violation(sequence[randomnode.planet], previncoming, jiggled, this.system);
 						if (jiggledviolation > maxflybydv) continue;
 
 						let t2 = transfers[i].t2 + normal() * timejiggle;
@@ -717,7 +681,7 @@ class MGAFinder {
 
 							let jiggled = Vector3.mult(this.mutate(nodsmoutdir, jiggle), vinf);
 
-							let jiggledviolation = this.violation(sequence[randomnode.planet], previncoming, jiggled);
+							let jiggledviolation = violation(sequence[randomnode.planet], previncoming, jiggled, this.system);
 							if (jiggledviolation > maxflybydv) continue;
 	
 							let propagatetime = Math.random() * currperiod * a;
@@ -782,10 +746,11 @@ class MGAFinder {
 
 			paths[i].push(
 				paths[i][sequence.length - 1].dvused + 
-				(includecapture ? this.calcEjectiondV(
+				(includecapture ? calcEjectiondV(
 					sequence[sequence.length - 1],
 					paths[i][sequence.length - 1].prevtransfer.incomingmag,
-					truefinalalt
+					truefinalalt,
+					this.system
 				) : 0)
 			);
 
