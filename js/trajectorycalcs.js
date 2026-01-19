@@ -39,7 +39,7 @@ export function calcCosDeflection(body, vinf, system) {
 	let stdgp = system.bodies[system.bodymap.get(body)].gravparameter;
 	let minalt = system.bodies[system.bodymap.get(body)].radius + system.bodies[system.bodymap.get(body)].atmodepth + 10000;
 
-	return 1 - 2 * Math.pow(1 / (1 + minalt * vinf * vinf / stdgp), 2);
+	return 1 - 2 / Math.pow(1 + minalt * vinf * vinf / stdgp, 2);
 }
 
 export function violation(body, vin, vout, system) {

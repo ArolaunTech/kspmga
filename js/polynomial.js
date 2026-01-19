@@ -122,124 +122,6 @@ export function solveQuadratic(b, c) {
 	];
 }
 
-export function solveCubicAnalytic(b, c, d) {
-	// Equation: x^3 + bx^2 + cx + d = 0
-
-	let delta0 = b * b - 3 * c;
-	let delta1 = 2 * b * b * b - 9 * b * c + 27 * d;
-
-	if (delta0 === 0 && delta1 === 0) {
-		return [
-			Complex.fromReal(-b / 3),
-			Complex.fromReal(-b / 3),
-			Complex.fromReal(-b / 3)
-		];
-	}
-
-	let insideroot = delta1 * delta1 - 4 * delta0 * delta0 * delta0;
-
-	let C;
-
-	if (insideroot <= 0) {
-		C = Complex.cbrt(new Complex(delta1 / 2, 0.5 * Math.sqrt(-insideroot)));
-	} else if (delta1 >= 0) {
-		C = Complex.cbrt(
-			Complex.fromReal(
-				0.5 * (delta1 + Math.sqrt(insideroot))
-			)
-		);
-	} else {
-		C = Complex.cbrt(
-			Complex.fromReal(
-				0.5 * (delta1 - Math.sqrt(insideroot))
-			)
-		);
-	}
-
-	let mult1 = new Complex(-0.5, Math.sqrt(3) / 2);
-	let mult2 = new Complex(-0.5, -Math.sqrt(3) / 2);
-
-	let C0 = C;
-	let C1 = Complex.mult(C, mult1);
-	let C2 = Complex.mult(C, mult2);
-
-	return [
-		Complex.multReal(
-			Complex.add(
-				Complex.fromReal(b), 
-				Complex.add(
-					C0, 
-					Complex.multReal(Complex.reciprocal(C0), delta0))
-			), 
-			-1/3
-		),
-		Complex.multReal(
-			Complex.add(
-				Complex.fromReal(b), 
-				Complex.add(
-					C1, 
-					Complex.multReal(Complex.reciprocal(C1), delta0))
-				),
-			-1/3
-		),
-		Complex.multReal(
-			Complex.add(
-				Complex.fromReal(b), 
-				Complex.add(
-					C2, 
-					Complex.multReal(Complex.reciprocal(C2), delta0))
-				),
-			-1/3
-		)
-	];
-}
-
-export function solveQuarticDurandKerner(p, q, r, s) {
-	// Solves the equation
-	//  4     3     2
-	// x  + px  + qx  + rx + s = 0
-
-	let sols = [new Complex(0.4, 0.9), new Complex(-0.65, 0.72), new Complex(-0.908, -0.297), new Complex(-0.0959, -0.936)];
-
-	let maxiters = 100;
-	for (let i = 0; i < maxiters; i++) {
-		let newsols = structuredClone(sols);
-		let maxf = 0;
-
-		for (let idx = 0; idx < 4; idx++) {
-			let f = Complex.add(
-				Complex.add(
-					Complex.add(
-						Complex.powInt(sols[idx], 4), 
-						Complex.multReal(Complex.powInt(sols[idx], 3), p)
-					),
-					Complex.add(
-						Complex.multReal(Complex.powInt(sols[idx], 2), q),
-						Complex.multReal(sols[idx], r)
-					)
-				),
-				Complex.fromReal(s)
-			);
-
-			for (let idx2 = 0; idx2 < 4; idx2++) {
-				if (idx == idx2) continue;
-
-				f = Complex.divide(f, Complex.sub(sols[idx], sols[idx2]));
-			}
-
-			if (f.sqnorm > maxf) maxf = f.sqnorm;
-
-			newsols[idx] = Complex.sub(newsols[idx], f);
-		}
-
-		sols = newsols;
-
-		if (maxf < 1e-30) break;
-	}
-
-	return sols;
-}
-
 export function solveQuarticBairstow(p, q, r, s) {
 	// Solves the equation
 	//  4     3     2
@@ -250,7 +132,7 @@ export function solveQuarticBairstow(p, q, r, s) {
 
 	let u, v;
 
-	while (!converged && iters < 100) {
+	while (!converged && iters < 1000) {
 		iters++;
 		u = Math.random();
 		v = Math.random();
@@ -285,114 +167,90 @@ export function solveQuarticBairstow(p, q, r, s) {
 	return solveQuadratic(u, v).concat(solveQuadratic(b1, b0));
 }
 
-export function solveQuarticAnalytic(B, C, D, E) {
-	// Equation: x^4 + Bx^3 + Cx^2 + Dx + E = 0
+export function solveQuarticMine(q3, q2, q1, q0) {
+	// I could do a scaling step but most of the time it won't be necessary
 
-	let a = -0.375 * B * B + C;
-	let b = 0.125 * B * B * B - 0.5 * B * C + D;
-	let c = -3 / 256 * B * B * B * B + 0.0625 * B * B * C - 0.25 * B * D + E;
+	// Find coefficients of associated cubic
+	let c0 = 4 * q0 * q2 - q0 * q3 * q3 - q1 * q1;
+	let c1 = q1 * q3 - 4 * q0;
+	let c2 = -q2;
 
-	// Equation: u^4 + au^2 + bu + c = 0, where u = x + B / 4
+	// Find coefficients of depressed form
+	let d0 = 8 * q0 * q2 / 3 - q0 * q3 * q3 - q1 * q1 - 2 * q2 * q2 * q2 / 27 + q1 * q2 * q3 / 3;
+	let d1 = q1 * q3 - 4 * q0 - q2 * q2 / 3;
 
-	if (b === 0) {
-		// biquadratic
-		let uroots = solveQuadratic(a, c);
-		let root0 = Complex.sqrt(uroots[0]);
-		let root2 = Complex.sqrt(uroots[1]);
+	// Find initial guess for Newton's method
+	let xg = 2 * Math.max(Math.abs(c2), Math.sqrt(Math.abs(c1)), Math.cbrt(Math.abs(c0)));
+	if (d1 > 0 && d0 > 0) xg = -xg;
+	if (d1 < 0 && d0 > 0) {
+		let xmin = (-c2 + Math.sqrt(c2 * c2 - 3 * c1)) / 3;
+		let ymin = ((xmin + c2) * xmin + c1) * xmin + c0;
 
-		return [
-			Complex.add(Complex.fromReal(-B / 4), root0),
-			Complex.sub(Complex.fromReal(-B / 4), root0),
-			Complex.add(Complex.fromReal(-B / 4), root2),
-			Complex.sub(Complex.fromReal(-B / 4), root2)
-		];
+		if (ymin > 0) xg = -xg;
 	}
 
-	// Not a biquadratic
-	let y = solveCubicAnalytic(-a / 2, -c, 0.5 * (a * c - 0.25 * b * b))[0];
+	// Solve cubic using Newton's method
+	for (let i = 0; i < 50; i++) {
+		let y = ((xg + c2) * xg + c1) * xg + c0;
+		let dy = (3 * xg + 2 * c2) * xg + c1;
 
-	let root = Complex.sqrt(Complex.sub(Complex.multReal(y, 2), Complex.fromReal(a)));
-	let sum = Complex.sub(Complex.multReal(y, -2), Complex.fromReal(a));
+		let dx = y / dy;
 
-	let u0 = Complex.multReal(
-		Complex.add(
-			root, 
-			Complex.sqrt(
-				Complex.sub(
-					sum, 
-					Complex.divide(
-						Complex.fromReal(2 * b), 
-						root
-					)
-				)
-			)
-		), 
-		0.5
-	);
+		let xgprev = xg;
 
-	let u1 = Complex.multReal(
-		Complex.sub(
-			root, 
-			Complex.sqrt(
-				Complex.sub(
-					sum, 
-					Complex.divide(
-						Complex.fromReal(2 * b), 
-						root
-					)
-				)
-			)
-		), 
-		0.5
-	);
+		xg -= dx;
 
-	let u2 = Complex.multReal(
-		Complex.add(
-			root, 
-			Complex.sqrt(
-				Complex.add(
-					sum, 
-					Complex.divide(
-						Complex.fromReal(2 * b), 
-						root
-					)
-				)
-			)
-		), 
-		-0.5
-	);
+		if (Math.abs(xg - xgprev) < 1e-12) break;
+	}
 
-	let u3 = Complex.multReal(
-		Complex.sub(
-			root, 
-			Complex.sqrt(
-				Complex.add(
-					sum, 
-					Complex.divide(
-						Complex.fromReal(2 * b), 
-						root
-					)
-				)
-			)
-		), 
-		-0.5
-	);
+	// Find u, v from xg
+	let discriminant = xg * xg - 4 * q0;
+	if (discriminant < 0) discriminant = 0;
 
-	u0.a -= B / 4;
-	u1.a -= B / 4;
-	u2.a -= B / 4;
-	u3.a -= B / 4;
+	let v = (xg >= 0) ? (xg + Math.sqrt(discriminant)) : (xg - Math.sqrt(discriminant));
+	v /= 2;
 
-	return [
-		u0, 
-		u1, 
-		u2, 
-		u3
-	];
+	let u = v * (q3 * v - q1) / (v * v - q0);
+
+	// Bairstow iterations to refine u, v
+	for (let i = 0; i < 15; i++) {
+		let b1 = q3 - u;
+		let b0 = q2 - v - u * b1;
+
+		let c = q1 - v * b1 - u * b0;
+		let d = q0 - v * b0;
+
+		let g = b1 - u;
+		let h = b0 - v;
+
+		let quotient = 1 / (v * g * g + h * (h - u * g));
+		let du = -quotient * (-h * c + g * d);
+		let dv = -quotient * (-g * v * c + (g * u - h) * d);
+
+		let pu = u;
+		let pv = v;
+
+		u += du;
+		v += dv;
+
+		if (u == pu && v == pv) break;
+	}
+
+	// Find other quadratic factor
+	let b1 = q3 - u;
+	let b0 = q2 - v - u * b1;
+
+	// Our quartic factors into
+	//  4     3     2              / 2        \  / 2           \
+	// x + q x + q x + q x + q  = | x + ux + v || x + b x + b   |
+	//      3     2     1     0    \          /  \     1     0 /
+
+	// Once again no scaling step
+	return solveQuadratic(u, v).concat(solveQuadratic(b1, b0));
 }
 
 export function realRootsQuartic(p, q, r, s) {
-	let roots = solveQuarticBairstow(p, q, r, s);
+	let roots = solveQuarticMine(p, q, r, s);
 	let out = [];
 
 	for (let i = 0; i < 4; i++) {
