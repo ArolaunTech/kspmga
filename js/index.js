@@ -3,6 +3,9 @@ import { secsToKerbalTimeString, kerbalTimeToSecs } from './kerbaltime.js';
 import { handleNumericMinMax, handleNumericMinMaxInt, setBodySelectOptions } from './input.js';
 import { Renderer } from './renderer.js';
 
+import { Vector3 } from './vector.js';
+import { calcEjectionDetailsInclined } from './trajectorycalcs.js';
+
 // Consts
 const aspectratio = 4 / 3;
 
@@ -355,6 +358,8 @@ let system = new System("https://arolauntech.github.io/kspmga/data/systems/stock
 
 	setBodySelectOptions(initbody, sys);
 	setBodySelectOptions(finalbody, sys);
+
+	console.log(calcEjectionDetailsInclined("Kerbin", new Vector3(1400, 1000, 500), 100000, sys));
 });
 
 let mgafinder;

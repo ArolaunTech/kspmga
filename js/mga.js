@@ -5,7 +5,7 @@ import { Orbit, propagate } from './orbit.js';
 import { TrajectoryTree } from './tree.js';
 import { randint, normal } from './random.js';
 import { lambert } from './lambert.js';
-import { calcEjectiondV, violation } from './trajectorycalcs.js';
+import { calcEjectionDetailsInclined, violation } from './trajectorycalcs.js';
 
 //Compute optimal MGA trajectories
 function infmult(M, ga) {
@@ -360,7 +360,7 @@ class MGAFinder {
 
 		let outgoing = new Vector3(trajectory[1], trajectory[2], trajectory[3]);
 
-		let dv = calcEjectiondV(sequence[0], outgoing.norm, initalt, this.system);
+		let dv = calcEjectionDetailsInclined(sequence[0], outgoing, initalt, this.system).dv;
 
 		// Iterate over each leg
 		for (let i = 0; i < sequence.length - 1; i++) {
@@ -400,7 +400,7 @@ class MGAFinder {
 			if (i === sequence.length - 2) {
 				// Capture
 				if (includecapture) {
-					dv += calcEjectiondV(sequence[i + 1], bestincoming.norm, finalalt, this.system);
+					dv += calcEjectionDetailsInclined(sequence[i + 1], bestincoming, finalalt, this.system).dv;
 				}
 			} else {
 				// Flyby
@@ -480,7 +480,17 @@ class MGAFinder {
 				for (let i = 0; i < transfers.length; i++) {
 					//if (Math.random() < 0.9) continue;
 
-					randomnode.children.push(new TrajectoryTree(1, calcEjectiondV(sequence[0], vinf, trueinitalt, this.system), transfers[i]));
+					randomnode.children.push(
+						new TrajectoryTree(
+							1, 
+							calcEjectionDetailsInclined(
+								sequence[0], 
+								transfers[i].outgoing, 
+								trueinitalt, 
+								this.system).dv, 
+							transfers[i]
+						)
+					);
 				
 					if (sequence.length === 2) numnodes++;
 					totalnodes++;
@@ -540,7 +550,7 @@ class MGAFinder {
 							randomnode.children.push(
 								new TrajectoryTree(
 									1, 
-									calcEjectiondV(sequence[0], vinf, trueinitalt, this.system), 
+									calcEjectionDetailsInclined(sequence[0], outgoing, trueinitalt, this.system).dv, 
 									{
 										t1: start,
 										t2: start + currperiod * a, 
@@ -746,12 +756,12 @@ class MGAFinder {
 
 			paths[i].push(
 				paths[i][sequence.length - 1].dvused + 
-				(includecapture ? calcEjectiondV(
+				(includecapture ? calcEjectionDetailsInclined(
 					sequence[sequence.length - 1],
-					paths[i][sequence.length - 1].prevtransfer.incomingmag,
+					paths[i][sequence.length - 1].prevtransfer.incoming,
 					truefinalalt,
 					this.system
-				) : 0)
+				).dv : 0)
 			);
 
 			let duration = paths[i][sequence.length - 1].prevtransfer.t2 - paths[i][1].prevtransfer.t1;

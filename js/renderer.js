@@ -9,7 +9,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { colorArrToHex } from './color.js';
 import { disposeHierarchy } from './dispose.js';
 import { secsToKerbalTimeString } from './kerbaltime.js';
-import { calcEjectiondV, calcPeriapsis, violation } from './trajectorycalcs.js';
+import { calcEjectionDetailsInclined, calcEjectiondV, calcPeriapsis, violation } from './trajectorycalcs.js';
 
 export class Renderer {
 	constructor(options) {
@@ -157,9 +157,17 @@ export class Renderer {
 		let parent = system.bodies[system.bodymap.get(sequence[0])].parent;
 		let mu = system.bodies[system.bodymap.get(parent)].gravparameter;
 
+		let ejecdetails = calcEjectionDetailsInclined(sequence[0], new Vector3(trajectory[0][1], trajectory[0][2], trajectory[0][3]), trajectory[2][1], system);
+		let prevejecdetails = calcEjectiondV(sequence[0], Math.hypot(trajectory[0][1], trajectory[0][2], trajectory[0][3]), trajectory[2][1], system);
+
+		console.log(prevejecdetails, ejecdetails);
+
 		let trajectorydetailstring = `Optimized MGA trajectory details:\n\n${sequence[0]} departure:\n`;
-		trajectorydetailstring += ` - Ejection Δv: ${calcEjectiondV(sequence[0], Math.hypot(trajectory[0][1], trajectory[0][2], trajectory[0][3]), trajectory[2][1], system).toFixed(3)} m/s\n`;
-		trajectorydetailstring += ` - Time: ${secsToKerbalTimeString(trajectory[0][0])}\n`;
+		trajectorydetailstring += ` - Ejection Δv: ${ejecdetails.dv.toFixed(3)} m/s\n`;
+		trajectorydetailstring += ` - Time: ${secsToKerbalTimeString(trajectory[0][0] - ejecdetails.dt)}\n`;
+		trajectorydetailstring += ` - Prograde: ${ejecdetails.prograde.toFixed(3)} m/s\n`;
+		trajectorydetailstring += ` - Normal: ${ejecdetails.normal.toFixed(3)} m/s\n`;
+		trajectorydetailstring += ` - Radial out: ${ejecdetails.radial.toFixed(3)} m/s\n`;
 
 		for (let i = 0; i < sequence.length - 1; i++) {
 			let t1 = trajectory[0][5 * i];
@@ -270,7 +278,10 @@ export class Renderer {
 			trajectorydetailstring += ` - Incoming v-inf: ${bestvin.norm.toFixed(3)} m/s\n`;
 			if (i === sequence.length - 2) {
 				trajectorydetailstring += ` - Periapsis: ${(trajectory[2][2] / 1000).toFixed(3)} km\n`;
-				trajectorydetailstring += ` - Required insertion: ${calcEjectiondV(sequence[sequence.length - 1], bestvin.norm, trajectory[2][2], system).toFixed(3)} m/s\n`;
+
+				let capturedetails = calcEjectionDetailsInclined(sequence[sequence.length - 1], bestvin, trajectory[2][2], system);
+
+				trajectorydetailstring += ` - Required insertion: ${capturedetails.dv.toFixed(3)} m/s\n`;
 			} else {
 				let nextvout = new Vector3(trajectory[0][5 * i + 6], trajectory[0][5 * i + 7], trajectory[0][5 * i + 8]);
 
