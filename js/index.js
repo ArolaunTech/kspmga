@@ -346,20 +346,20 @@ updateCanvasSize();
 const renderer = new Renderer({
 	fov: 75,
 	scale: 1e-9,
-	mindist: 0.1,
-	maxdist: 1000,
+	mindist: 0.01,
+	maxdist: 100000,
 	aspect: aspectratio,
 	htmlCanvas: canvas
 });
 
-let system = new System("https://arolauntech.github.io/kspmga/data/systems/stock.json", (sys) => {
+let system = new System("https://arolauntech.github.io/kspmga/data/systems/rss.json", (sys) => {
 	renderer.fillSceneWithSystem(sys);
 	renderer.updateSceneWithSystem(sys, 0);
 
 	setBodySelectOptions(initbody, sys);
 	setBodySelectOptions(finalbody, sys);
 
-	console.log(calcEjectionDetailsInclined("Kerbin", new Vector3(1400, 1000, 500), 100000, sys));
+	//console.log(calcEjectionDetailsInclined("Kerbin", new Vector3(1400, 1000, 500), 100000, sys));
 });
 
 let mgafinder;
