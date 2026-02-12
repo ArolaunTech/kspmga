@@ -4,9 +4,9 @@ import json
 import math
 
 #========== Inputs ==========
-folderpath = "configs/stock"
-outputpath = "systems/stock.json"
-systemname = "stock"
+folderpath = "configs/rss"
+outputpath = "systems/rsspre.json"
+systemname = "rss"
 
 #========== Consts ==========
 lbracket = pp.Literal("{").suppress()
@@ -30,7 +30,7 @@ config.create_diagram("out.html", show_hidden=True)
 
 configs = os.listdir(folderpath)
 
-res = {"name": "stock", "bodies": []}
+res = {"name": systemname, "bodies": []}
 
 rootmass = -1
 for configpath in configs:

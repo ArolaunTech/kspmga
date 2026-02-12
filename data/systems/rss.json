@@ -1,0 +1,830 @@
+{
+    "name": "rss",
+    "bodies": [
+        {
+            "name": "Uranus",
+            "radius": 24702000.0,
+            "gravparameter": 5793951322279009.0,
+            "atmospheric": true,
+            "atmodepth": 1400000.0,
+            "root": false,
+            "soi": 51692514225.02219,
+            "color": [
+                0.38,
+                0.58,
+                0.78,
+                1.0
+            ],
+            "orbit": {
+                "sma": 2866832853163.975,
+                "eccentricity": 0.04620653158718433,
+                "inclination": 0.4131642877470863,
+                "parent": "Sun",
+                "lan": 0.03222034301501075,
+                "argp": 2.961608699528735,
+                "meananomalyatepoch": 5.006070925851672,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Venus",
+            "radius": 6049000.0,
+            "gravparameter": 324858592000000.06,
+            "atmospheric": true,
+            "atmodepth": 145000.0,
+            "root": false,
+            "soi": 616280853.7469519,
+            "color": [
+                0.701,
+                0.384,
+                0.16,
+                1.0
+            ],
+            "orbit": {
+                "sma": 108209548790.4671,
+                "eccentricity": 0.006810339650842032,
+                "inclination": 0.4269769351855754,
+                "parent": "Sun",
+                "lan": 0.1393052585480437,
+                "argp": 2.159183983176034,
+                "meananomalyatepoch": 5.432267392125204,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Triton",
+            "radius": 1353400.0,
+            "gravparameter": 1427598140725.034,
+            "atmospheric": true,
+            "atmodepth": 110000.0,
+            "root": false,
+            "soi": 230473.6338950758,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 354767243.5406647,
+                "eccentricity": 0.0001688014359763687,
+                "inclination": 2.737269679072787,
+                "parent": "Neptune",
+                "lan": 3.4417076729671052,
+                "argp": 3.847618979320826,
+                "meananomalyatepoch": 6.25973135910971,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Dione",
+            "radius": 561400.0,
+            "gravparameter": 73116366487.32,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 74736.27104620726,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 377650651.501709,
+                "eccentricity": 0.001679230905502774,
+                "inclination": 0.0004886921905584122,
+                "parent": "Saturn",
+                "lan": 2.2438058824843745,
+                "argp": 2.1584786288960096,
+                "meananomalyatepoch": 2.9308839134421727,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Vesta",
+            "radius": 262700.0,
+            "gravparameter": 17288244969.3,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 39276806.019105665,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 353346223803.158,
+                "eccentricity": 0.0902068412255369,
+                "inclination": 0.3974052568189096,
+                "parent": "Sun",
+                "lan": 0.31707611659555673,
+                "argp": 4.126750192914969,
+                "meananomalyatepoch": 1.0657102610896119,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Mars",
+            "radius": 3375800.0,
+            "gravparameter": 42828373620699.09,
+            "atmospheric": true,
+            "atmodepth": 125000.0,
+            "root": false,
+            "soi": 577254070.8724953,
+            "color": [
+                0.631,
+                0.388,
+                0.192,
+                1.0
+            ],
+            "orbit": {
+                "sma": 227949699961.9763,
+                "eccentricity": 0.09326110278323557,
+                "inclination": 0.43096933978291496,
+                "parent": "Sun",
+                "lan": 0.05850188428492846,
+                "argp": 5.796277986822967,
+                "meananomalyatepoch": 2.9564361325350452,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Oberon",
+            "radius": 761400.0,
+            "gravparameter": 205323430253.5623,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 174503.23157048615,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 583435328.340603,
+                "eccentricity": 0.00110558297330948,
+                "inclination": 1.3078608164875696,
+                "parent": "Uranus",
+                "lan": 2.90926721491393,
+                "argp": 4.790229915478581,
+                "meananomalyatepoch": 4.651563202426656,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Jupiter",
+            "radius": 69373000.0,
+            "gravparameter": 1.266865349218008e+17,
+            "atmospheric": true,
+            "atmodepth": 1550000.0,
+            "root": false,
+            "soi": 48196176124.28713,
+            "color": [
+                0.749,
+                0.592,
+                0.4,
+                1.0
+            ],
+            "orbit": {
+                "sma": 778188938659.7554,
+                "eccentricity": 0.04872660654702194,
+                "inclination": 0.4058437334667811,
+                "parent": "Sun",
+                "lan": 0.056933989163696165,
+                "argp": 0.18773507583700397,
+                "meananomalyatepoch": 5.281038885954535,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Phobos",
+            "radius": 7250.0,
+            "gravparameter": 708754.6066894452,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 47000.0,
+            "color": [
+                0.56,
+                0.454,
+                0.388,
+                1.0
+            ],
+            "orbit": {
+                "sma": 9378492.209088314,
+                "eccentricity": 0.01539938155583979,
+                "inclination": 0.6339792287218076,
+                "parent": "Mars",
+                "lan": 0.8112661339049585,
+                "argp": 6.244367863439236,
+                "meananomalyatepoch": 0.12540401573484683,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Io",
+            "radius": 1811300.0,
+            "gravparameter": 5959916033410.404,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 485582.1133159705,
+            "color": [
+                0.647,
+                0.631,
+                0.364,
+                1.0
+            ],
+            "orbit": {
+                "sma": 422018294.5236953,
+                "eccentricity": 0.003545858426216978,
+                "inclination": 0.444432305538919,
+                "parent": "Jupiter",
+                "lan": 6.249092798992173,
+                "argp": 4.036429001633056,
+                "meananomalyatepoch": 3.4091064061869685,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Deimos",
+            "radius": 5456.0,
+            "gravparameter": 96155.69648120314,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 45000.0,
+            "color": [
+                0.462,
+                0.372,
+                0.313,
+                1.0
+            ],
+            "orbit": {
+                "sma": 23458112.01759387,
+                "eccentricity": 0.00032946807986617,
+                "inclination": 0.6680661379182955,
+                "parent": "Mars",
+                "lan": 0.8293618851480613,
+                "argp": 4.605860835144996,
+                "meananomalyatepoch": 5.646210530657005,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Titania",
+            "radius": 788900.0,
+            "gravparameter": 226943700374.1248,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 135825.2548607649,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 436292682.967703,
+                "eccentricity": 0.002486916,
+                "inclination": 1.3097957132403586,
+                "parent": "Uranus",
+                "lan": 2.9086875666463325,
+                "argp": 2.892805435437687,
+                "meananomalyatepoch": 3.711534845860309,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Callisto",
+            "radius": 2409300.0,
+            "gravparameter": 7179289361397.27,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 2335100.479795301,
+            "color": [
+                0.407,
+                0.341,
+                0.262,
+                1.0
+            ],
+            "orbit": {
+                "sma": 1883812366.573522,
+                "eccentricity": 0.007973319796896609,
+                "inclination": 0.44402572780098837,
+                "parent": "Jupiter",
+                "lan": 6.257044748914076,
+                "argp": 5.597898677267007,
+                "meananomalyatepoch": 0.27604372240404196,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Europa",
+            "radius": 1550800.0,
+            "gravparameter": 3202738774922.892,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 602463.3128711213,
+            "color": [
+                0.776,
+                0.78,
+                0.678,
+                1.0
+            ],
+            "orbit": {
+                "sma": 671253637.5417169,
+                "eccentricity": 0.009511727119926178,
+                "inclination": 0.4486131960007806,
+                "parent": "Jupiter",
+                "lan": 6.264615146789209,
+                "argp": 0.9273302122238276,
+                "meananomalyatepoch": 4.821737415499958,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Charon",
+            "radius": 603500.0,
+            "gravparameter": 105879988860.1881,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 4497.100857873791,
+            "color": [
+                0.776,
+                0.698,
+                0.647,
+                1.0
+            ],
+            "orbit": {
+                "sma": 19596193.83540397,
+                "eccentricity": 5.082225659448947e-05,
+                "inclination": 1.7453292519943296e-05,
+                "parent": "Pluto",
+                "lan": 3.8817060426976,
+                "argp": 3.2894894927157874,
+                "meananomalyatepoch": 0.5393048609025978,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Earth",
+            "radius": 6371000.0,
+            "gravparameter": 398600435436096.0,
+            "atmospheric": true,
+            "atmodepth": 140000.0,
+            "root": false,
+            "soi": 924649202.4610229,
+            "color": [
+                0.0,
+                0.278,
+                0.388,
+                1.0
+            ],
+            "orbit": {
+                "sma": 149598261150.4425,
+                "eccentricity": 0.01609636160505683,
+                "inclination": 0.40921055885703245,
+                "parent": "Sun",
+                "lan": 6.283124227931622,
+                "argp": 1.7972016299403262,
+                "meananomalyatepoch": 6.231885654519576,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Iapetus",
+            "radius": 734500.0,
+            "gravparameter": 120512088703.3,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 860433.7252655644,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 3560162593.02297,
+                "eccentricity": 0.0288028628196961,
+                "inclination": 0.13070770768185533,
+                "parent": "Saturn",
+                "lan": 0.8777946513655213,
+                "argp": 5.486999405687218,
+                "meananomalyatepoch": 2.4359269334587883,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Miranda",
+            "radius": 235700.0,
+            "gravparameter": 4319516899.2321,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 8289.948957586923,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 129880047.634175,
+                "eccentricity": 0.00118741261963413,
+                "inclination": 1.371632524277764,
+                "parent": "Uranus",
+                "lan": 2.9507271476466364,
+                "argp": 5.702994678323522,
+                "meananomalyatepoch": 4.4156939860723,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Moon",
+            "radius": 1737100.0,
+            "gravparameter": 4902800066163.796,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 408971.40120992565,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 384308437.7707066,
+                "eccentricity": 0.05328149353682574,
+                "inclination": 0.49502211417699393,
+                "parent": "Kerbin",
+                "lan": 0.04008351366616158,
+                "argp": 3.486541150390846,
+                "meananomalyatepoch": 3.8868698006324554,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Rhea",
+            "radius": 763800.0,
+            "gravparameter": 153942464353.5,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 140528.54149192962,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 527212645.707199,
+                "eccentricity": 0.001168269515756326,
+                "inclination": 0.005777039824101231,
+                "parent": "Saturn",
+                "lan": 2.2753343891983606,
+                "argp": 3.014824310916716,
+                "meananomalyatepoch": 0.23542531935505198,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Neptune",
+            "radius": 24085000.0,
+            "gravparameter": 6835099502439672.0,
+            "atmospheric": true,
+            "atmodepth": 1250000.0,
+            "root": false,
+            "soi": 86636358530.1769,
+            "color": [
+                0.19215,
+                0.33333,
+                0.56862,
+                1.0
+            ],
+            "orbit": {
+                "sma": 4497455832811.736,
+                "eccentricity": 0.008090397688364061,
+                "inclination": 0.38933686947318014,
+                "parent": "Sun",
+                "lan": 0.061306622261752194,
+                "argp": 0.5203673688234857,
+                "meananomalyatepoch": 2.829170831890268,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Pluto",
+            "radius": 1187000.0,
+            "gravparameter": 869613817760.8748,
+            "atmospheric": true,
+            "atmodepth": 110000.0,
+            "root": false,
+            "soi": 3114585521.171567,
+            "color": [
+                0.678,
+                0.568,
+                0.474,
+                1.0
+            ],
+            "orbit": {
+                "sma": 5845670624078.223,
+                "eccentricity": 0.2462772488425983,
+                "inclination": 0.41211349698343896,
+                "parent": "Sun",
+                "lan": 0.7742454810274607,
+                "argp": 3.2200370914626495,
+                "meananomalyatepoch": 5.238251980021541,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Ganymede",
+            "radius": 2624100.0,
+            "gravparameter": 9887834453334.145,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 1508668.0805519782,
+            "color": [
+                0.584,
+                0.501,
+                0.396,
+                1.0
+            ],
+            "orbit": {
+                "sma": 1070823468.894524,
+                "eccentricity": 0.001190086418361844,
+                "inclination": 0.4410571578636161,
+                "parent": "Jupiter",
+                "lan": 6.248497270956345,
+                "argp": 2.431230682574104,
+                "meananomalyatepoch": 4.060950472376478,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Tethys",
+            "radius": 531100.0,
+            "gravparameter": 41211077826.41,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 46411.31583448747,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 294973462.3804425,
+                "eccentricity": 0.001064868868083566,
+                "inclination": 0.019041542139258134,
+                "parent": "Saturn",
+                "lan": 2.0813372266985417,
+                "argp": 3.7685094973370497,
+                "meananomalyatepoch": 6.105565273654561,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Umbriel",
+            "radius": 531100.0,
+            "gravparameter": 85093380944.89388,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 55932.31837584765,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 265992360.127656,
+                "eccentricity": 0.0038334454580725,
+                "inclination": 1.3088921915050802,
+                "parent": "Uranus",
+                "lan": 2.907022278688787,
+                "argp": 3.6255012844062313,
+                "meananomalyatepoch": 1.995350222525624,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Sun",
+            "radius": 696342000.0,
+            "gravparameter": 1.3271244004193939e+20,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": true,
+            "soi": -1,
+            "color": [
+                1,
+                1,
+                0.75,
+                1
+            ],
+            "orbit": {
+                "sma": -1,
+                "eccentricity": -1,
+                "inclination": -1,
+                "parent": null,
+                "lan": -1,
+                "argp": -1,
+                "meananomalyatepoch": -1,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Titan",
+            "radius": 2573300.0,
+            "gravparameter": 8977864800000.0,
+            "atmospheric": true,
+            "atmodepth": 600000.0,
+            "root": false,
+            "soi": 1656394.4922813338,
+            "color": [
+                0.7,
+                0.5,
+                0.25,
+                1.0
+            ],
+            "orbit": {
+                "sma": 1221966238.511425,
+                "eccentricity": 0.02891936561555365,
+                "inclination": 0.1127568685630746,
+                "parent": "Saturn",
+                "lan": 2.2077459185524972,
+                "argp": 3.1780469355613192,
+                "meananomalyatepoch": 1.311809948776336,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Ariel",
+            "radius": 578900.0,
+            "gravparameter": 83463444317.70477,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 39841.9616098296,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 190944364.477622,
+                "eccentricity": 0.00190951361476287,
+                "inclination": 1.3072324862155031,
+                "parent": "Uranus",
+                "lan": 2.9071444683526106,
+                "argp": 2.9670010940400195,
+                "meananomalyatepoch": 0.810944190678705,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Mercury",
+            "radius": 2439700.0,
+            "gravparameter": 22031780000000.02,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 112408990.75442436,
+            "color": [
+                0.321,
+                0.317,
+                0.352,
+                1.0
+            ],
+            "orbit": {
+                "sma": 57908973645.88802,
+                "eccentricity": 0.2056187266319207,
+                "inclination": 0.4992081673663184,
+                "parent": "Sun",
+                "lan": 0.1896372083246792,
+                "argp": 1.1676900290053547,
+                "meananomalyatepoch": 5.553920558995985,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Ceres",
+            "radius": 473000.0,
+            "gravparameter": 62632500000.0,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 76962905.73054667,
+            "color": [
+                0.5,
+                0.5,
+                0.5,
+                1.0
+            ],
+            "orbit": {
+                "sma": 413738762313.173,
+                "eccentricity": 0.079363494880566,
+                "inclination": 0.47346139144715577,
+                "parent": "Sun",
+                "lan": 0.40928272506899455,
+                "argp": 2.254808778849267,
+                "meananomalyatepoch": 1.0500332058738224,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Enceladus",
+            "radius": 252100.0,
+            "gravparameter": 7211454165.826,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 18679.949256352105,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 238413699.4838728,
+                "eccentricity": 0.006227897999957464,
+                "inclination": 0.00015707963267948963,
+                "parent": "Saturn",
+                "lan": 2.2414289019459366,
+                "argp": 2.0169302100141544,
+                "meananomalyatepoch": 6.049837363294359,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Saturn",
+            "radius": 57216000.0,
+            "gravparameter": 3.793120749865224e+16,
+            "atmospheric": true,
+            "atmodepth": 2000000.0,
+            "root": false,
+            "soi": 54475312962.69387,
+            "color": [
+                0.917,
+                0.847,
+                0.709,
+                1.0
+            ],
+            "orbit": {
+                "sma": 1424838758613.269,
+                "eccentricity": 0.05347166506749872,
+                "inclination": 0.3939194649785674,
+                "parent": "Sun",
+                "lan": 0.10421091037724535,
+                "argp": 1.484343397560793,
+                "meananomalyatepoch": 1.1775536145636776,
+                "epoch": 0
+            }
+        },
+        {
+            "name": "Mimas",
+            "radius": 198200.0,
+            "gravparameter": 2503524000.0,
+            "atmospheric": false,
+            "atmodepth": -1,
+            "root": false,
+            "soi": 396000.0,
+            "color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "orbit": {
+                "sma": 186009285.922049,
+                "eccentricity": 0.01776275223147744,
+                "inclination": 0.027436575841350862,
+                "parent": "Saturn",
+                "lan": 2.4392804048877186,
+                "argp": 3.8784231723199216,
+                "meananomalyatepoch": 2.1919760798055545,
+                "epoch": 0
+            }
+        }
+    ]
+}

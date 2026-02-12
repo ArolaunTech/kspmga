@@ -1,1 +1,2 @@
 Stock configs from Kittopia dumps
+RSS configs from RSS source: https://github.com/KSP-RO/RealSolarSystem
