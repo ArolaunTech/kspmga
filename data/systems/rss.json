@@ -1,5 +1,8 @@
 {
     "name": "rss",
+    "SCALE": 1e-10,
+    "mindist": 0.2,
+    "maxdist": 2000,
     "bodies": [
         {
             "name": "Uranus",

@@ -12,8 +12,6 @@ export class System {
 		fetch(JSONPath)
 			.then(response => response.json())
 			.then(json => {
-				//console.log(structuredClone(json));
-
 				this.bodies = json.bodies;
 
 				let numbodies = this.bodies.length;
@@ -23,8 +21,6 @@ export class System {
 
 				for (let i = 0; i < numbodies; i++) {
 					if (this.bodies[i].root) continue;
-
-					//console.log(i, this.bodies[i]);
 
 					let parent = this.bodies[i].orbit.parent;
 					let mu = this.bodies[this.bodymap.get(parent)].gravparameter;
@@ -44,7 +40,7 @@ export class System {
 					this.bodies[i].orbit = neworbit;
 				}
 
-				f(this);
+				f(this, json);
 
 				this.ready = true;
 			});

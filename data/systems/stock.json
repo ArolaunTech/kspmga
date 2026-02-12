@@ -1,5 +1,8 @@
 {
     "name": "stock",
+    "SCALE": 1e-9,
+    "mindist": 0.5,
+    "maxdist": 500,
     "bodies": [
         {
             "name": "Kerbin",

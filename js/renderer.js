@@ -27,8 +27,8 @@ export class Renderer {
 		this.renderer.setAnimationLoop(this.createAnimationCallback(this));
 
 		this.controls = new OrbitControls(this.camera, this.canvas);
-		this.controls.minDistance = 0.5;
-		this.controls.maxDistance = 500;
+		this.controls.minDistance = options.minscrolldist;
+		this.controls.maxDistance = options.maxscrolldist;
 		this.camera.position.z = 5;
 		this.controls.update();
 
@@ -41,6 +41,21 @@ export class Renderer {
 		this.loader = new THREE.TextureLoader();
 
 		this.podsprite = this.createPodSprite();
+	}
+
+	updateSettings(options) {
+		this.scale = options.scale;
+		this.controls.minDistance = options.minscrolldist;
+		this.controls.maxDistance = options.maxscrolldist;
+
+		this.controls.update();
+	}
+
+	clearTrajectory() {
+		disposeHierarchy(this.trajectorygroup);
+		this.trajectorygroup.clear();
+
+		this.podsprite.visible = false;
 	}
 
 	createPodSprite() {
@@ -63,6 +78,11 @@ export class Renderer {
 
 	fillSceneWithSystem(system) {
 		let numbodies = system.bodies.length;
+
+		for (let i = 0; i < this.groups.length; i++) {
+			disposeHierarchy(this.groups[i]);
+			this.groups[i].clear();
+		}
 		this.groups = [];
 
 		const texture = this.loader.load('https://arolauntech.github.io/kspmga/sprites/circle.png');
@@ -148,8 +168,7 @@ export class Renderer {
 		console.log(trajectory);
 		console.log(JSON.stringify(trajectory));
 
-		disposeHierarchy(this.trajectorygroup);
-		this.trajectorygroup.clear();
+		this.clearTrajectory();
 
 		this.podsprite.visible = true;
 

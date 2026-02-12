@@ -37,6 +37,7 @@ const stopsearch = document.getElementById("stopsearch");
 const errormsg = document.getElementById("errormsg");
 const trajdetails = document.getElementById("trajdetailsp");
 const searchdetails = document.getElementById("searchdetails");
+const systemselect = document.getElementById("systemselect");
 
 let disabled = false;
 
@@ -58,6 +59,28 @@ function updateCanvasSize() {
 }
 
 window.onresize = updateCanvasSize;
+
+systemselect.onchange = function() {
+	system = new System(`https://arolauntech.github.io/kspmga/data/systems/${systemselect.value}.json`, (sys, json) => {
+		renderer.updateSettings({
+			scale: json.SCALE,
+			minscrolldist: json.mindist,
+			maxscrolldist: json.maxdist,
+		});
+
+		displayedtrajectory = [];
+
+		renderer.clearTrajectory();
+		renderer.fillSceneWithSystem(sys);
+		renderer.updateSceneWithSystem(sys, 0);
+
+		setBodySelectOptions(initbody, sys);
+		setBodySelectOptions(finalbody, sys);
+
+		timeslider.min = 0;
+		timeslider.max = 9201600;
+	});
+}
 
 timeslider.oninput = function() {
 	timedisplay.innerText = secsToKerbalTimeString(this.value);
@@ -343,23 +366,24 @@ subbody.onclick = function() {
 updateCanvasSize();
 
 // Render
-const renderer = new Renderer({
-	fov: 75,
-	scale: 1e-9,
-	mindist: 0.01,
-	maxdist: 100000,
-	aspect: aspectratio,
-	htmlCanvas: canvas
-});
+let renderer;
+let system = new System("https://arolauntech.github.io/kspmga/data/systems/stock.json", (sys, json) => {
+	renderer = new Renderer({
+		fov: 75,
+		scale: json.SCALE,
+		mindist: 0.01,
+		maxdist: 100000,
+		aspect: aspectratio,
+		minscrolldist: json.mindist,
+		maxscrolldist: json.maxdist,
+		htmlCanvas: canvas
+	});
 
-let system = new System("https://arolauntech.github.io/kspmga/data/systems/rss.json", (sys) => {
 	renderer.fillSceneWithSystem(sys);
 	renderer.updateSceneWithSystem(sys, 0);
 
 	setBodySelectOptions(initbody, sys);
 	setBodySelectOptions(finalbody, sys);
-
-	//console.log(calcEjectionDetailsInclined("Kerbin", new Vector3(1400, 1000, 500), 100000, sys));
 });
 
 let mgafinder;
