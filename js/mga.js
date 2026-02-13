@@ -436,11 +436,12 @@ class MGAFinder {
 		// Global search
 		let numnodes = 0;
 		let totalnodes = 0;
+		let objsteps = 0;
 		for (let steps = 0; steps < 50000; steps++) {
-			if (steps % 1000 === 0) {
+			if (objsteps % 1000 === 0) {
 				postMessage({
 					status: "report",
-					steps: steps,
+					steps: objsteps,
 					foundtrajectories: numnodes,
 					nodes: totalnodes
 				});
@@ -450,12 +451,15 @@ class MGAFinder {
 			if ((numnodes > 10) && (totalnodes > 10000)) break;
 
 			let randomnode = tree;
+			let roottime = null;
 
 			while (randomnode.children.length > 0) {
 				if (Math.random() < 1 / 5) break;
 				if (randomnode.planet === sequence.length - 2) break;
 
 				randomnode = randomnode.children[randint(0, randomnode.children.length)];
+
+				if (randomnode.planet === 1) roottime = randomnode.prevtransfer.t1;
 			}
 
 			if (randomnode.children.length > steps / 1000 && ((randomnode.planet > 0) || (Math.random() < 0.9))) {
@@ -479,6 +483,8 @@ class MGAFinder {
 
 				for (let i = 0; i < transfers.length; i++) {
 					//if (Math.random() < 0.9) continue;
+
+					if (transfers[i].t2 - transfers[i].t1 > maxduration) continue;
 
 					randomnode.children.push(
 						new TrajectoryTree(
@@ -520,6 +526,8 @@ class MGAFinder {
 	
 					for (let b = 1; b <= maxrevs[0]; b++) {
 						for (let a = 1; a <= 100; a++) {
+							if (currperiod * a > maxduration) break;
+
 							let period = currperiod * a / b;
 	
 							if (period > maxperiod) break;
@@ -579,6 +587,8 @@ class MGAFinder {
 
 				for (let i = 0; i < transfers.length; i++) {
 					//if (Math.random() < 0.9) continue;
+					if (transfers[i].t2 - roottime > maxduration) continue;
+
 					let nonjiggledviolation = violation(sequence[randomnode.planet], previncoming, transfers[i].outgoing, this.system);
 					if (nonjiggledviolation < maxflybydv) {
 						randomnode.children.push(new TrajectoryTree(randomnode.planet + 1, randomnode.dvused + nonjiggledviolation, transfers[i]));
@@ -722,6 +732,7 @@ class MGAFinder {
 							}
 
 							if (mindvdsm > maxdvdsm) continue;
+							if (t2jiggled - roottime > maxduration) continue;
 
 							let dsmtransfer = {
 								t1: start,
@@ -744,6 +755,8 @@ class MGAFinder {
 					}
 				}
 			}
+
+			objsteps++;
 		}
 
 		// Get all found trajectories

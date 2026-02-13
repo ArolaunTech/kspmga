@@ -214,7 +214,7 @@ export class Renderer {
 
 			if (todsm > period) todsm = period;
 
-			const segments = 100;
+			const segments = 1000;
 			let points = [];
 			for (let j = 0; j <= segments; j++) {
 				let time = todsm * j / segments;

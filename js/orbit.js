@@ -273,6 +273,8 @@ export class Orbit {
 
 //Based on pykep.propagate_lagrangian
 export function propagate(r0, v0, tof, mu) {
+	const tau = 2 * Math.PI;
+
 	if (tof === 0) {
 		return {
 			r: r0,
@@ -321,20 +323,24 @@ export function propagate(r0, v0, tof, mu) {
 		// +============= Difference form of Kepler equation for ellipses =============+
 		// | dM = dE + dot(r0, v0) * (1 - cos(dE)) / sqrt(mu * a) - (1 - r / a)sin(dE) |
 		// +===========================================================================+
-		//
-		// Setting up Newton's method:
-		// f(dE) = dE + dot(r0, v0) * (1 - cos(dE)) / sqrt(mu * a) - (1 - r / a)sin(dE) - dM
-		// f'(dE) = 1 + dot(r0, v0) * sin(dE) / sqrt(mu * a) - (1 - r / a)cos(dE)
 
-		let dE = dM;
+		let dE = dM - C1;
 
-		// Newton's method
-		for (let i = 0; i < 5; i++) {
+		// Halley's method
+		for (let i = 0; i < 15; i++) {
 			let f = dE + C1 * (1 - Math.cos(dE)) - C2 * Math.sin(dE) - dM;
-			let df = 1 + C1 * Math.sin(dE) - C2 * Math.cos(dE);
 
-			dE -= f / df;
+			if (Math.abs(f) < 1e-12) break;
+
+			let df = 1 + C1 * Math.sin(dE) - C2 * Math.cos(dE);
+			let ddf = C1 * Math.cos(dE) + C2 * Math.sin(dE);
+
+			dE -= f * df / (df * df - 0.5 * f * ddf);
 		}
+
+		//let f = dE + C1 * (1 - Math.cos(dE)) - C2 * Math.sin(dE) - dM;
+		//if (Math.abs(f) > 1e-10 || !Number.isFinite(f)) console.log(f, C1, C2, dM);
+		//if (Math.abs(f) > 1e-3) console.warn(f);
 
 		let r2 = a + (r - a) * Math.cos(dE) + rvdot * Math.sqrt(a / mu) * Math.sin(dE);
 
@@ -377,8 +383,22 @@ export function propagate(r0, v0, tof, mu) {
 		let dH = -alpha;
 
 		for (let i = 0; i < 15; i++) {
+			let pdH = dH;
 			dH = Math.asinh((C1 + dM + dH) / R) - alpha;
+
+			if (Math.abs(pdH - dH) < 1e-12) break;
 		}
+
+		for (let i = 0; i < 5; i++) {
+			let f = C1 * (Math.cosh(dH) - 1) + C2 * Math.sinh(dH) - dH - dM;
+			let df = C1 * Math.sinh(dH) + C2 * Math.cosh(dH) - 1;
+
+			dH -= f / df;
+		}
+
+		//let f = C1 * (Math.cosh(dH) - 1) + C2 * Math.sinh(dH) - dH - dM;
+		//if (Math.abs(f) > 1e-10 || !Number.isFinite(f)) console.log("h", f, C1, C2, dM);
+		//if (Math.abs(f) > 1e-3) console.warn(f);
 
 		let r2 = a + (r - a) * Math.cosh(dH) + rvdot * Math.sqrt(-a / mu) * Math.sinh(dH);
 
