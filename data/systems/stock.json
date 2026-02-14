@@ -3,6 +3,8 @@
     "SCALE": 1e-9,
     "mindist": 0.5,
     "maxdist": 500,
+    "secondsperday": 21600,
+    "secondsperyear": 9201600,
     "bodies": [
         {
             "name": "Kerbin",

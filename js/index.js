@@ -1,5 +1,5 @@
 import { System } from './system.js';
-import { secsToKerbalTimeString, kerbalTimeToSecs } from './kerbaltime.js';
+import { secsToKerbalTimeString, kerbalTimeToSecs, settimesystem, gettimesystem } from './kerbaltime.js';
 import { handleNumericMinMax, handleNumericMinMaxInt, setBodySelectOptions } from './input.js';
 import { Renderer } from './renderer.js';
 
@@ -78,7 +78,9 @@ systemselect.onchange = function() {
 		setBodySelectOptions(finalbody, sys);
 
 		timeslider.min = 0;
-		timeslider.max = 9201600;
+		timeslider.max = json.secondsperyear;
+
+		settimesystem(json.secondsperday, json.secondsperyear);
 	});
 }
 
@@ -159,7 +161,7 @@ function startMGASearch() {
 
 	let maxdvdsmnum = Number(maxdvdsm.value);
 
-	let maxdurationnum = Number(maxduration.value) * 21600;
+	let maxdurationnum = Number(maxduration.value) * gettimesystem()[0];
 
 	if (maxduration.value.length === 0) {
 		maxdurationnum = Infinity;
@@ -384,6 +386,8 @@ let system = new System("https://arolauntech.github.io/kspmga/data/systems/stock
 
 	setBodySelectOptions(initbody, sys);
 	setBodySelectOptions(finalbody, sys);
+
+	settimesystem(json.secondsperday, json.secondsperyear);
 });
 
 let mgafinder;

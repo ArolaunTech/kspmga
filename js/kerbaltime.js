@@ -1,9 +1,21 @@
+var SECONDSPERDAY = 21600;
+var SECONDSPERYEAR = 9201600;
+
+export function settimesystem(secsperday, secsperyear) {
+	SECONDSPERDAY = secsperday;
+	SECONDSPERYEAR = secsperyear;
+}
+
+export function gettimesystem() {
+	return [SECONDSPERDAY, SECONDSPERYEAR];
+}
+
 export function secsToKerbalDuration(secs) {
 	let seconds = secs % 60;
 	let minutes = Math.floor(secs / 60) % 60;
 	let hours = Math.floor(secs / 3600) % 6;
-	let days = Math.floor(secs / 21600) % 426;
-	let years = Math.floor(secs / 9201600);
+	let days = Math.floor(secs / SECONDSPERDAY) % (SECONDSPERYEAR / SECONDSPERDAY);
+	let years = Math.floor(secs / SECONDSPERYEAR);
 
 	return [years, days, hours, minutes, seconds];
 }
@@ -43,5 +55,5 @@ export function kerbalTimeToSecs(time) {
 }
 
 export function kerbalDurationToSecs(duration) {
-	return 9201600 * duration[0] + 21600 * duration[1] + 3600 * duration[2] + 60 * duration[3] + duration[4];
+	return SECONDSPERYEAR * duration[0] + SECONDSPERDAY * duration[1] + 3600 * duration[2] + 60 * duration[3] + duration[4];
 }
