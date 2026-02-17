@@ -1,5 +1,5 @@
 import { System } from './system.js';
-import { secsToKerbalTimeString, kerbalTimeToSecs, settimesystem, gettimesystem } from './kerbaltime.js';
+import { secsToTimeString, timeToSecs, setTimeSystem, getTimeSystem } from './kerbaltime.js';
 import { handleNumericMinMax, handleNumericMinMaxInt, setBodySelectOptions } from './input.js';
 import { Renderer } from './renderer.js';
 
@@ -77,15 +77,18 @@ systemselect.onchange = function() {
 		setBodySelectOptions(initbody, sys);
 		setBodySelectOptions(finalbody, sys);
 
-		timeslider.min = 0;
-		timeslider.max = json.secondsperyear;
+		setTimeSystem(json.timesystem);
 
-		settimesystem(json.secondsperday, json.secondsperyear);
+		timeslider.min = 0;
+		timeslider.max = ((getTimeSystem() == "KERBAL") ? 9201600 : 31536000);
+
+		timedisplay.innerText = secsToTimeString(timeslider.value);
+		time = timeslider.value;
 	});
 }
 
 timeslider.oninput = function() {
-	timedisplay.innerText = secsToKerbalTimeString(this.value);
+	timedisplay.innerText = secsToTimeString(this.value);
 	time = this.value;
 	renderer.updateSceneWithSystem(system, time);
 
@@ -161,7 +164,7 @@ function startMGASearch() {
 
 	let maxdvdsmnum = Number(maxdvdsm.value);
 
-	let maxdurationnum = Number(maxduration.value) * gettimesystem()[0];
+	let maxdurationnum = Number(maxduration.value) * ((getTimeSystem() == "KERBAL") ? 21600 : 86400);
 
 	if (maxduration.value.length === 0) {
 		maxdurationnum = Infinity;
@@ -172,8 +175,13 @@ function startMGASearch() {
 		return;
 	}
 
-	let earliesttime = kerbalTimeToSecs([Number(earliestyear.value), Number(earliestday.value), Number(earliesthour.value), 0, 0]);
-	let latesttime = kerbalTimeToSecs([Number(latestyear.value), Number(latestday.value), Number(latesthour.value), 0, 0]);
+	if ((getTimeSystem() === "REAL") && ((Number(earliestyear.value) < 1951) || (Number(latestyear.value) < 1951))) {
+		errormsg.innerText = "Error: must provide a valid date!";
+		return;
+	}
+
+	let earliesttime = timeToSecs([Number(earliestyear.value), Number(earliestday.value), Number(earliesthour.value), 0, 0]);
+	let latesttime = timeToSecs([Number(latestyear.value), Number(latestday.value), Number(latesthour.value), 0, 0]);
 
 	if ((latestyear.value.length === 0) || (latestday.value.length === 0) || (latesthour.value.length === 0)) {
 		latesttime = Infinity;
@@ -217,7 +225,7 @@ function startMGASearch() {
 		timeslider.min = e.data.result[0][0];
 		timeslider.max = e.data.result[0][e.data.result[0].length - 1];
 
-		timedisplay.innerText = secsToKerbalTimeString(timeslider.value);
+		timedisplay.innerText = secsToTimeString(timeslider.value);
 		time = timeslider.value;
 		renderer.updateSceneWithSystem(system, time);
 		renderer.updatePodTrajectory(e.data.result, system, time);
@@ -387,7 +395,7 @@ let system = new System("https://arolauntech.github.io/kspmga/data/systems/stock
 	setBodySelectOptions(initbody, sys);
 	setBodySelectOptions(finalbody, sys);
 
-	settimesystem(json.secondsperday, json.secondsperyear);
+	setTimeSystem(json.timesystem);
 });
 
 let mgafinder;

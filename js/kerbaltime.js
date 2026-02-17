@@ -1,26 +1,24 @@
-var SECONDSPERDAY = 21600;
-var SECONDSPERYEAR = 9201600;
+var TIMESYSTEM = "KERBAL";
 
-export function settimesystem(secsperday, secsperyear) {
-	SECONDSPERDAY = secsperday;
-	SECONDSPERYEAR = secsperyear;
+export function setTimeSystem(system) {
+	TIMESYSTEM = system;
 }
 
-export function gettimesystem() {
-	return [SECONDSPERDAY, SECONDSPERYEAR];
+export function getTimeSystem() {
+	return TIMESYSTEM;
 }
 
-export function secsToKerbalDuration(secs) {
+function secsToKerbalDuration(secs) {
 	let seconds = secs % 60;
 	let minutes = Math.floor(secs / 60) % 60;
 	let hours = Math.floor(secs / 3600) % 6;
-	let days = Math.floor(secs / SECONDSPERDAY) % (SECONDSPERYEAR / SECONDSPERDAY);
-	let years = Math.floor(secs / SECONDSPERYEAR);
+	let days = Math.floor(secs / 21600) % 426;
+	let years = Math.floor(secs / 9201600);
 
 	return [years, days, hours, minutes, seconds];
 }
 
-export function secsToKerbalTime(secs) {
+function secsToKerbalTime(secs) {
 	let duration = secsToKerbalDuration(secs);
 
 	duration[0]++;
@@ -29,7 +27,7 @@ export function secsToKerbalTime(secs) {
 	return duration;
 }
 
-export function secsToKerbalTimeString(secs) {
+function secsToKerbalTimeString(secs) {
 	let time = secsToKerbalTime(secs);
 
 	let stringminutes = String(time[3]);
@@ -45,15 +43,39 @@ export function secsToKerbalTimeString(secs) {
 	return `Year ${time[0]}, Day ${time[1]} ${time[2]}:${stringminutes}:${stringseconds}`;
 }
 
-export function kerbalTimeToSecs(time) {
-	let duration = time;
-
-	duration[0]--;
-	duration[1]--;
-
-	return kerbalDurationToSecs(duration);
+function kerbalDurationToSecs(duration) {
+	return 9201600 * duration[0] + 21600 * duration[1] + 3600 * duration[2] + 60 * duration[3] + duration[4];
 }
 
-export function kerbalDurationToSecs(duration) {
-	return SECONDSPERYEAR * duration[0] + SECONDSPERDAY * duration[1] + 3600 * duration[2] + 60 * duration[3] + duration[4];
+function realDurationToSecs(duration) {
+	return 31536000 * duration[0] + 86400 * duration[1] + 3600 * duration[2] + 60 * duration[3] + duration[4];
+}
+
+function secsToRealTimeString(secs) {
+	return new Date(-599616000000 + Math.round(1000 * secs)).toUTCString();
+}
+
+export function secsToTimeString(secs) {
+	if (TIMESYSTEM == "KERBAL") return secsToKerbalTimeString(secs);
+	return secsToRealTimeString(secs);
+}
+
+export function durationToSecs(duration) {
+	if (TIMESYSTEM == "KERBAL") return kerbalDurationToSecs(duration);
+	return realDurationToSecs(duration);
+}
+
+export function timeToSecs(time) {
+	if (TIMESYSTEM == "KERBAL") {
+		let duration = time;
+
+		duration[0]--;
+		duration[1]--;
+
+		return kerbalDurationToSecs(duration);
+	} else {
+		return Math.round(0.001 * (new Date(
+			`${time[0]}`
+		).getTime() + 86400 * (time[1] - 1) + 3600 * time[2] + 60 * time[3] + time[4] + 599616000000));
+	}
 }

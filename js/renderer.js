@@ -8,7 +8,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { colorArrToHex } from './color.js';
 import { disposeHierarchy } from './dispose.js';
-import { secsToKerbalTimeString } from './kerbaltime.js';
+import { secsToTimeString } from './kerbaltime.js';
 import { calcEjectionDetailsInclined, calcEjectiondV, calcPeriapsis, violation } from './trajectorycalcs.js';
 
 export class Renderer {
@@ -183,7 +183,7 @@ export class Renderer {
 
 		let trajectorydetailstring = `Optimized MGA trajectory details:\n\n${sequence[0]} departure:\n`;
 		trajectorydetailstring += ` - Ejection Δv: ${ejecdetails.dv.toFixed(3)} m/s\n`;
-		trajectorydetailstring += ` - Time: ${secsToKerbalTimeString(trajectory[0][0] - ejecdetails.dt)}\n`;
+		trajectorydetailstring += ` - Time: ${secsToTimeString(trajectory[0][0] - ejecdetails.dt)}\n`;
 		trajectorydetailstring += ` - Prograde: ${ejecdetails.prograde.toFixed(3)} m/s\n`;
 		trajectorydetailstring += ` - Normal: ${ejecdetails.normal.toFixed(3)} m/s\n`;
 		trajectorydetailstring += ` - Radial out: ${ejecdetails.radial.toFixed(3)} m/s\n`;
@@ -282,7 +282,7 @@ export class Renderer {
 
 			trajectorydetailstring += `\n${sequence[i]}-${sequence[i + 1]} DSM:\n`;
 			trajectorydetailstring += ` - Δv: ${mindvdsm.toFixed(3)} m/s\n`;
-			trajectorydetailstring += ` - Time: ${secsToKerbalTimeString(tdsm)}\n`;
+			trajectorydetailstring += ` - Time: ${secsToTimeString(tdsm)}\n`;
 			trajectorydetailstring += ` - Prograde: ${Vector3.dot(Vector3.sub(bestvafter, statedsm.v), progradedirdsm).toFixed(3)} m/s\n`;
 			trajectorydetailstring += ` - Normal: ${Vector3.dot(Vector3.sub(bestvafter, statedsm.v), normaldirdsm).toFixed(3)} m/s\n`;
 			trajectorydetailstring += ` - Radial out: ${Vector3.dot(Vector3.sub(bestvafter, statedsm.v), radialdirdsm).toFixed(3)} m/s\n`;
@@ -293,7 +293,7 @@ export class Renderer {
 				trajectorydetailstring += `\n${sequence[i + 1]} flyby:\n`;
 			}
 
-			trajectorydetailstring += ` - Time: ${secsToKerbalTimeString(t2)}\n`;
+			trajectorydetailstring += ` - Time: ${secsToTimeString(t2)}\n`;
 			trajectorydetailstring += ` - Incoming v-inf: ${bestvin.norm.toFixed(3)} m/s\n`;
 			if (i === sequence.length - 2) {
 				trajectorydetailstring += ` - Periapsis: ${(trajectory[2][2] / 1000).toFixed(3)} km\n`;
